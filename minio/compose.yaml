@@ -1,0 +1,27 @@
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - minio_network
+
+volumes:
+  minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./minio_data
+      o: bind
+
+networks:
+  minio_network:
+    driver: bridge
