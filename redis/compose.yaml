@@ -1,0 +1,41 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - redis_network
+
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-insight
+    ports:
+      - "5540:5540"
+    environment:
+      - REDIS_HOST=redis
+    volumes:
+      - redis_insight_data:/data
+    profiles: ["redis-insight"]
+    networks:
+      - redis_network
+
+volumes:
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./redis_data
+      o: bind
+  redis_insight_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./redis_insight_data
+      o: bind
+
+networks:
+  redis_network:
+    driver: bridge
