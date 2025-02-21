@@ -13,7 +13,8 @@ This repository contains a collection of Docker Compose configurations for vario
 ## What next?
 
 - [ ] **RabbitMQ**
-- [ ] **Elastic search wit Kibana**
+- [ ] **ElasticSearch with Kibana**
+- [ ] **ElasticAPM support**
 - [ ] **Qdrant Vector DB**
 - [ ] **Grafana with Prometheus**
 - [ ] **Milvus Vector DB**
