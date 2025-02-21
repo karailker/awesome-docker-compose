@@ -10,6 +10,14 @@ This repository contains a collection of Docker Compose configurations for vario
 - **MinIO**: A setup for MinIO object storage service.
 - **Redis with RedisInsight**: A setup for Redis in-memory data structure store with RedisInsight for management.
 
+## What next?
+
+- [ ] **RabbitMQ**
+- [ ] **Elastic search wit Kibana**
+- [ ] **Qdrant Vector DB**
+- [ ] **Grafana with Prometheus**
+- [ ] **Milvus Vector DB**
+
 ## Usage
 
 To use any of the configurations, navigate to the respective directory and run:
