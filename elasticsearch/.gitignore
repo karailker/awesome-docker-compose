@@ -1,2 +1,5 @@
-elasticsearch_data/
+certs_data/
+es*_data/
 kibana_data/
+elasticapm_data/
+compose_old.yaml
