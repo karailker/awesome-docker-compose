@@ -10,15 +10,12 @@ This repository contains a collection of Docker Compose configurations for vario
 - **MinIO**: A setup for MinIO object storage service.
 - **Redis with RedisInsight**: A setup for Redis in-memory data structure store with RedisInsight for management.
 - **RabbitMQ**: A setup for RabbitMQ message broker to enable reliable messaging between distributed systems.
-- **Elastic Search with Kibana**: A setup for Elasticsearch search engine with Kibana for data visualization and analysis.
-- **Qdrant Vector DB**: 
-- **Milvus Vector DB**: 
+- **Qdrant Vector DB**: A setup for Qdrant, a vector database optimized for storing and searching high-dimensional vectors, commonly used in machine learning and AI applications.
+- **Milvus Vector DB**: A setup for Milvus, an open-source vector database designed for similarity search and AI-powered applications.
 
 ## What next?
 - [ ] **ElasticAPM support**
-- [ ] **Qdrant Vector DB**
 - [ ] **Grafana with Prometheus**
-- [ ] **Milvus Vector DB**
 
 ## Usage
 
