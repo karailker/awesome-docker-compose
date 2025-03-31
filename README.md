@@ -9,11 +9,10 @@ This repository contains a collection of Docker Compose configurations for vario
 - **Kafka with Kafka UI**: A setup for Kafka message broker with Kafka UI for management.
 - **MinIO**: A setup for MinIO object storage service.
 - **Redis with RedisInsight**: A setup for Redis in-memory data structure store with RedisInsight for management.
+- **RabbitMQ**: A setup for RabbitMQ message broker to enable reliable messaging between distributed systems.
+- **Elastic Search with Kibana**: A setup for Elasticsearch search engine with Kibana for data visualization and analysis.
 
 ## What next?
-
-- [X] **RabbitMQ**
-- [ ] **ElasticSearch with Kibana**
 - [ ] **ElasticAPM support**
 - [ ] **Qdrant Vector DB**
 - [ ] **Grafana with Prometheus**
