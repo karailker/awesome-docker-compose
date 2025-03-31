@@ -1,3 +1,5 @@
+#source: https://github.com/evermight/elastic-cluster-docker-compose/blob/master/docker-compose.yml
+
 services:
   setup:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION:-8.15.0}
@@ -43,14 +45,20 @@ services:
           "      - localhost\n"\
           "    ip:\n"\
           "      - 127.0.0.1\n"\
+          "  - name: apm-server\n"\
+          "    dns:\n"\
+          "      - apm-server\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
           > config/certs/instances.yml;
           bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;
           unzip config/certs/certs.zip -d config/certs;
         fi;
         echo "Setting file permissions"
         chown -R root:root config/certs;
-        find . -type d -exec chmod 750 \{\} \;;
-        find . -type f -exec chmod 640 \{\} \;;
+        find . -type d -exec chmod 750 \{\} \; ;
+        find . -type f -exec chmod 640 \{\} \; ;
         echo "Waiting for Elasticsearch availability";
         until curl -s --cacert config/certs/ca/ca.crt https://es01:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
@@ -214,6 +222,40 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
+  
+  apm-server:
+    depends_on:
+      es01:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    image: docker.elastic.co/apm/apm-server:${STACK_VERSION:-8.15.0}
+    ports:
+      - ${APM_PORT:-8200}:8200
+    volumes:
+      - certs_data:/usr/share/apm-server/config/certs
+      - apm_data:/usr/share/apm-server/data
+    environment:
+      - output.elasticsearch.hosts="https://es01:9200,https://es02:9200,https://es03:9200"
+      - output.elasticsearch.username=elastic
+      - output.elasticsearch.password=${ELASTIC_PASSWORD:-elasticpassword}
+      - output.elasticsearch.ssl.verification_mode=none
+      - output.elasticsearch.ssl.certificate_authorities=/usr/share/apm-server/config/certs/ca/ca.crt
+      - apm-server.ssl.enabled=false
+      - apm-server.kibana.enabled=true
+      - apm-server.kibana.host=https://kibana:5601
+      - apm-server.kibana.username=kibana_system
+      - apm-server.kibana.password=${KIBANA_PASSWORD:-kibanasystempassword}
+      - ES_HOSTS=https://es01:9200,https://es02:9200,https://es03:9200"
+      - KIBANA_HOST=https://kibana:5601
+      - ELASTICSEARCH_HOSTS=https://es01:9200,https://es02:9200,https://es03:9200"
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD:-elasticpassword}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/usr/share/apm-server/config/certs/ca/ca.crt
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
 
 volumes:
   es01_data:
@@ -245,6 +287,12 @@ volumes:
     driver_opts:
       type: none
       device: ./certs_data
+      o: bind
+  apm_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./apm_data
       o: bind
 
 networks:

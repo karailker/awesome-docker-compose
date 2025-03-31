@@ -12,9 +12,9 @@ This repository contains a collection of Docker Compose configurations for vario
 - **RabbitMQ**: A setup for RabbitMQ message broker to enable reliable messaging between distributed systems.
 - **Qdrant Vector DB**: A setup for Qdrant, a vector database optimized for storing and searching high-dimensional vectors, commonly used in machine learning and AI applications.
 - **Milvus Vector DB**: A setup for Milvus, an open-source vector database designed for similarity search and AI-powered applications.
+**ElasticSearch with Kibana**: A setup for ElasticSearch, a distributed search and analytics engine, paired with Kibana for visualization and exploration of data. Note: ElasticAPM integration is currently under development and does not work properly yet. I am actively working on resolving the issues.
 
 ## What next?
-- [ ] **ElasticAPM support**
 - [ ] **Grafana with Prometheus**
 
 ## Usage

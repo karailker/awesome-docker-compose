@@ -2,4 +2,5 @@ certs_data/
 es*_data/
 kibana_data/
 elasticapm_data/
-compose_old.yaml
+elasticsearch_data/
+apm_data/
