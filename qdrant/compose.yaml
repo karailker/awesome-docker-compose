@@ -1,0 +1,31 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"  # REST API
+      - "6334:6334"  # gRPC
+    expose:
+      - "6333"  # Internal exposure
+      - "6334"  
+      - "6335"  # Cluster RPC
+    volumes:
+      - type: bind
+        source: ./qdrant_data
+        target: /qdrant/storage
+      - ./config/production.yaml:/qdrant/config/production.yaml:ro  # External config
+    networks:
+      - qdrant_network
+
+volumes:
+  qdrant_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./qdrant_data
+      o: bind
+
+networks:
+  qdrant_network:
+    driver: bridge

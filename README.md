@@ -11,6 +11,8 @@ This repository contains a collection of Docker Compose configurations for vario
 - **Redis with RedisInsight**: A setup for Redis in-memory data structure store with RedisInsight for management.
 - **RabbitMQ**: A setup for RabbitMQ message broker to enable reliable messaging between distributed systems.
 - **Elastic Search with Kibana**: A setup for Elasticsearch search engine with Kibana for data visualization and analysis.
+- **Qdrant Vector DB**: 
+- **Milvus Vector DB**: 
 
 ## What next?
 - [ ] **ElasticAPM support**
