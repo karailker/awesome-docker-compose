@@ -14,6 +14,8 @@ This repository contains a collection of Docker Compose configurations for vario
 - **Milvus Vector DB**: A setup for Milvus, an open-source vector database designed for similarity search and AI-powered applications.
 - **ElasticSearch with Kibana**: A setup for ElasticSearch, a distributed search and analytics engine, paired with Kibana for visualization and exploration of data. Note: ElasticAPM integration is currently under development and does not work properly yet. I am actively working on resolving the issues.
 - **Grafana with Prometheus**: A setup for Grafana, a powerful visualization and monitoring tool, paired with Prometheus, a robust time-series database and monitoring system. This configuration enables efficient metric collection, storage, and visualization for system and application monitoring.
+- **MongoDB with Mongo-Express**: A setup for MongoDB, a NoSQL database known for its flexibility and scalability, paired with Mongo-Express for database management through a web-based interface.
+- **MySQL with Adminer and phpMyAdmin**: A setup for MySQL, a popular relational database management system, with Adminer and phpMyAdmin for easy database administration and management.
 
 ## What next?
 - [ ] **MLOps Stack**
