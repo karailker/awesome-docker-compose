@@ -1,0 +1,41 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.iml
+
+# Logs and Temporary Files
+logs/
+*.log
+*.bak
+*.tmp
+*.swp
+
+# Build Artifacts
+dist/
+build/
+coverage/
+
+## Project-Specific
+
+# GitLab CI/CD
+# Development in progress
+gitlab/
+

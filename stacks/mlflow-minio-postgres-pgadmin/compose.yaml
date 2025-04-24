@@ -1,0 +1,107 @@
+x-mlflow-creds: &mlflow-creds
+  AWS_ACCESS_KEY_ID:      ${MINIO_ROOT_USER:-minioadmin}
+  AWS_SECRET_ACCESS_KEY:  ${MINIO_ROOT_PASSWORD:-minioadmin}
+  MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+  AWS_REGION:             ${AWS_REGION:-us-east-1}
+
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: mlflow_server
+    depends_on:
+      - postgres
+      - minio
+    restart: unless-stopped
+    environment:
+      <<: *mlflow-creds
+      # avoids boto3 SSL complaints in local dev
+      AWS_SSL_VERIFY: "0"
+    command: >
+      /bin/sh -c "
+      pip install --upgrade psycopg2-binary &&
+      mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri postgresql://myuser:mypassword@postgres:5432/mydatabase --default-artifact-root s3://mlflow/
+      "
+    ports:
+      - "5000:5000"
+    networks:
+      - mflow-stack-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - mflow-stack-network
+
+  createbuckets:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        sleep 5 &&
+        mc alias set local http://minio:9000 minioadmin minioadmin &&
+        mc mb -p local/mlflow || true &&
+        mc policy set public local/mlflow &&
+        echo 'MinIO bucket ready.' "
+    profiles: ["init"]
+    networks:
+      - mflow-stack-network
+    restart: "no"
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
+      POSTGRES_USER: ${POSTGRES_USER:-myuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mflow-stack-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-myuser} -d ${POSTGRES_DB:-mydatabase}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  pgadmin:
+    image: elestio/pgadmin:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-adminpassword}
+    depends_on:
+      - postgres
+    ports:
+      - "5433:80"
+    networks:
+      - mflow-stack-network
+    restart: unless-stopped
+
+volumes:
+  minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./minio_data
+      o: bind
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./postgres_data
+      o: bind
+
+networks:
+  mflow-stack-network:
+    driver: bridge

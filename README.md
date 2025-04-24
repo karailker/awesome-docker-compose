@@ -4,21 +4,39 @@ This repository contains a collection of Docker Compose configurations for vario
 
 ## Available Configurations
 
-- **Postgres with pgAdmin**: A setup for PostgreSQL database with pgAdmin for database management.
-- **Postgres-pgVector with pgAdmin**: A setup for PostgreSQL with pgVector extension and pgAdmin for database management.
-- **Kafka with Kafka UI**: A setup for Kafka message broker with Kafka UI for management.
-- **MinIO**: A setup for MinIO object storage service.
-- **Redis with RedisInsight**: A setup for Redis in-memory data structure store with RedisInsight for management.
-- **RabbitMQ**: A setup for RabbitMQ message broker to enable reliable messaging between distributed systems.
-- **Qdrant Vector DB**: A setup for Qdrant, a vector database optimized for storing and searching high-dimensional vectors, commonly used in machine learning and AI applications.
-- **Milvus Vector DB**: A setup for Milvus, an open-source vector database designed for similarity search and AI-powered applications.
-- **ElasticSearch with Kibana**: A setup for ElasticSearch, a distributed search and analytics engine, paired with Kibana for visualization and exploration of data. Note: ElasticAPM integration is currently under development and does not work properly yet. I am actively working on resolving the issues.
-- **Grafana with Prometheus**: A setup for Grafana, a powerful visualization and monitoring tool, paired with Prometheus, a robust time-series database and monitoring system. This configuration enables efficient metric collection, storage, and visualization for system and application monitoring.
-- **MongoDB with Mongo-Express**: A setup for MongoDB, a NoSQL database known for its flexibility and scalability, paired with Mongo-Express for database management through a web-based interface.
-- **MySQL with Adminer and phpMyAdmin**: A setup for MySQL, a popular relational database management system, with Adminer and phpMyAdmin for easy database administration and management.
+### Base
+These are individual service setups that can be used as building blocks for your projects:
+
+- **Postgres with pgAdmin**: PostgreSQL database with pgAdmin for management.
+- **Postgres-pgVector with pgAdmin**: PostgreSQL with pgVector extension and pgAdmin.
+- **Kafka with Kafka UI**: Kafka message broker with a management UI.
+- **MinIO**: High-performance object storage service.
+- **Redis with RedisInsight**: In-memory data store with a management UI.
+- **RabbitMQ**: Reliable messaging between distributed systems.
+- **Qdrant Vector DB**: Optimized for storing and searching high-dimensional vectors.
+- **Milvus Vector DB**: Open-source vector database for similarity search.
+- **ElasticSearch with Kibana**: Distributed search engine with Kibana for visualization.
+- **Grafana with Prometheus**: Metric collection, storage, and visualization.
+- **MongoDB with Mongo-Express**: MongoDB paired with a web-based management interface.
+- **MySQL with Adminer and phpMyAdmin**: MySQL with Adminer and phpMyAdmin for administration.
+
+### Stacks
+These are pre-configured setups combining multiple services for specific use cases:
+
+- **MLflow with MinIO and Postgres**: A stack for managing the machine learning lifecycle, including MinIO for object storage and Postgres for metadata storage.
+
+> **Note**: ElasticAPM integration for ElasticSearch is under development and may not work properly yet. Updates are in progress.
 
 ## What next?
-- [ ] **MLOps Stack**
+- [X] **MLFlow Stack**
+- [ ] **Apache Airflow**
+- [ ] **Apache Superset**
+- [ ] **dbt Core**
+- [ ] **Feast**
+- [ ] **Great Expectations**
+- [ ] **BentoML**
+- [ ] **Nvidia Triton**
+- [ ] **Valkey**
 
 ## Usage
 
