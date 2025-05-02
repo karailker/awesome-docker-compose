@@ -1,0 +1,6 @@
+dags/
+logs/
+plugins/
+postgres_data/
+redis_data/
+*.log

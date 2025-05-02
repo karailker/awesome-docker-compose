@@ -28,15 +28,19 @@ These are pre-configured setups combining multiple services for specific use cas
 > **Note**: ElasticAPM integration for ElasticSearch is under development and may not work properly yet. Updates are in progress.
 
 ## What next?
-- [X] **MLFlow Stack**
-- [ ] **Apache Airflow**
-- [ ] **Apache Superset**
-- [ ] **dbt Core**
-- [ ] **Feast**
-- [ ] **Great Expectations**
-- [ ] **BentoML**
-- [ ] **Nvidia Triton**
-- [ ] **Valkey**
+- ✅ **MLFlow Stack** added to stacks
+- ✅ **Apache Airflow** added to base
+- ⬜ **Apache Superset**
+- ⬜ **dbt Core**
+- ⬜ **Feast**
+- ⬜ **Great Expectations**
+- ⬜ **BentoML**
+- ⬜ **Nvidia Triton**
+- ⬜ **Valkey**
+
+### Legend:
+- ✅ Completed
+- ⬜ Pending
 
 ## Usage
 
