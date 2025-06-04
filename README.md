@@ -12,6 +12,7 @@ These are individual service setups that can be used as building blocks for your
 - **Kafka with Kafka UI**: Kafka message broker with a management UI.
 - **MinIO**: High-performance object storage service.
 - **Redis with RedisInsight**: In-memory data store with a management UI.
+- **Valkey**: Drop-in Redis replacement managed by the Linux Foundation.
 - **RabbitMQ**: Reliable messaging between distributed systems.
 - **Qdrant Vector DB**: Optimized for storing and searching high-dimensional vectors.
 - **Milvus Vector DB**: Open-source vector database for similarity search.
@@ -36,7 +37,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - ⬜ **Great Expectations**
 - ⬜ **BentoML**
 - ⬜ **Nvidia Triton**
-- ⬜ **Valkey**
+- ✅ **Valkey** added to base
 
 ### Legend:
 - ✅ Completed
