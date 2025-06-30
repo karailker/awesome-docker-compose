@@ -32,16 +32,21 @@ These are pre-configured setups combining multiple services for specific use cas
 - ✅ **MLFlow Stack** added to stacks
 - ✅ **Apache Airflow** added to base
 - ⬜ **Apache Superset**
-- ⬜ **dbt Core**
+- 🚧 **dbt Core**
 - ⬜ **Feast**
 - ⬜ **Great Expectations**
 - ⬜ **BentoML**
 - ⬜ **Nvidia Triton**
 - ✅ **Valkey** added to base
+- ⬜ **Prefect**
+- 🚧 **GitLab**
 
 ### Legend:
-- ✅ Completed
-- ⬜ Pending
+- ✅ Completed  
+- ⬜ Pending  
+- ❌ Canceled  
+- 🔄 Postponed  
+- 🚧 In Progress 
 
 ## Usage
 

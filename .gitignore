@@ -39,3 +39,6 @@ coverage/
 # Development in progress
 gitlab/
 
+# dbt-core
+# Development in progress
+dbt-core/
