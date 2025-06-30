@@ -1,0 +1,22 @@
+services:
+  valkey:
+    image: valkey/valkey:latest
+    container_name: valkey
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    networks:
+      - valkey_network
+
+volumes:
+  valkey_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./valkey_data
+      o: bind
+
+networks:
+  valkey_network:
+    driver: bridge
