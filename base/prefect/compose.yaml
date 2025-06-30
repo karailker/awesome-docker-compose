@@ -1,0 +1,53 @@
+services:
+  prefect-server:
+    image: prefecthq/prefect:3-latest
+    command: prefect server start --host 0.0.0.0
+    ports:
+      - "4200:4200"  # Prefect UI
+    environment:
+      - PREFECT_ORION_API_HOST=0.0.0.0
+      - PREFECT_ORION_DATABASE_CONNECTION_URL=postgresql+asyncpg://${POSTGRES_USER:-myuser}:${POSTGRES_PASSWORD:-mypassword}@prefect_postgres/{POSTGRES_DB:-mydatabase}
+    depends_on:
+      - prefect_postgres
+    networks:
+      - prefect_network
+
+  prefect-worker-1:
+    image: prefecthq/prefect:3-latest
+    depends_on:
+      - prefect-server
+    environment:
+      - PREFECT_API_URL=http://prefect-server:4200/api
+    command: prefect worker start --pool default
+    networks:
+      - prefect_network
+  
+  prefect_postgres:
+    image: postgres:latest
+    container_name: prefect_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
+      POSTGRES_USER: ${POSTGRES_USER:-myuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - prefect_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-myuser} -d ${POSTGRES_DB:-mydatabase}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./postgres_data
+      o: bind
+
+networks:
+  prefect_network:
+    driver: bridge

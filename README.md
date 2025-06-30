@@ -20,6 +20,8 @@ These are individual service setups that can be used as building blocks for your
 - **Grafana with Prometheus**: Metric collection, storage, and visualization.
 - **MongoDB with Mongo-Express**: MongoDB paired with a web-based management interface.
 - **MySQL with Adminer and phpMyAdmin**: MySQL with Adminer and phpMyAdmin for administration.
+- **Apache Airflow**: Platform to programmatically author, schedule, and monitor workflows.
+- **Prefect**: Workflow orchestration tool for automating and managing data workflows.
 
 ### Stacks
 These are pre-configured setups combining multiple services for specific use cases:
@@ -38,7 +40,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - ⬜ **BentoML**
 - ⬜ **Nvidia Triton**
 - ✅ **Valkey** added to base
-- ⬜ **Prefect**
+- ✅ **Prefect**
 - 🚧 **GitLab**
 
 ### Legend:
