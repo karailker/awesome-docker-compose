@@ -1,0 +1,14 @@
+# /feature_repo/feature_store.yaml
+project: feast_project             # Sadece harf/rakam/altçizgi/tire; _ veya - ile başlamasın
+provider: local
+
+registry: registry.db              # /feature_repo içindeki dosya
+online_store:
+  type: sqlite
+  path: online_store.db            # /feature_repo/online_store.db
+
+offline_store:
+  type: file
+
+entity_key_serialization_version: 2
+# registry_cache_ttl_seconds: 60

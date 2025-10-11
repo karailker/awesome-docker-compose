@@ -22,6 +22,7 @@ These are individual service setups that can be used as building blocks for your
 - **MySQL with Adminer and phpMyAdmin**: MySQL with Adminer and phpMyAdmin for administration.
 - **Apache Airflow**: Platform to programmatically author, schedule, and monitor workflows.
 - **Prefect**: Workflow orchestration tool for automating and managing data workflows.
+- **Feast**: Open-source feature store for managing and serving ML features in production.
 
 ### Stacks
 These are pre-configured setups combining multiple services for specific use cases:
@@ -34,14 +35,14 @@ These are pre-configured setups combining multiple services for specific use cas
 - ✅ **MLFlow Stack** added to stacks
 - ✅ **Apache Airflow** added to base
 - ⬜ **Apache Superset**
-- 🚧 **dbt Core**
-- ⬜ **Feast**
+- 🔄 **dbt Core**
+- ✅ **Feast**
 - ⬜ **Great Expectations**
 - ⬜ **BentoML**
 - ⬜ **Nvidia Triton**
 - ✅ **Valkey** added to base
 - ✅ **Prefect**
-- 🚧 **GitLab**
+- 🔄 **GitLab**
 
 ### Legend:
 - ✅ Completed  

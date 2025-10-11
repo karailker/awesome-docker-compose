@@ -1,0 +1,65 @@
+x-defaults: &default-service
+  image: ${FEAST_IMAGE:-quay.io/feastdev/feature-server:latest}
+  restart: unless-stopped
+  environment:
+    FEAST_USAGE: ${FEAST_USAGE:-local}
+    FEAST_LOG_LEVEL: ${FEAST_LOG_LEVEL:-INFO}
+  networks:
+    - feature_network
+  volumes:
+    - feature_repo:${FEAST_CONFIG_DIR:-/feature_repo}
+
+services:
+  online-feature-server:
+    <<: *default-service
+    container_name: ${ONLINE_CONTAINER_NAME:-online-feature-server}
+    command: >
+      feast -c ${FEAST_CONFIG_DIR:-/feature_repo}
+      serve -h ${FEAST_BIND_HOST:-0.0.0.0}
+      -p ${ONLINE_PORT:-6566}
+    ports:
+      - "${ONLINE_PORT:-6566}:${ONLINE_PORT:-6566}"
+
+  offline-feature-server:
+    <<: *default-service
+    container_name: ${OFFLINE_CONTAINER_NAME:-offline-feature-server}
+    command: >
+      feast -c ${FEAST_CONFIG_DIR:-/feature_repo}
+      serve_offline -h ${FEAST_BIND_HOST:-0.0.0.0}
+      -p ${OFFLINE_PORT:-8815}
+    ports:
+      - "${OFFLINE_PORT:-8815}:${OFFLINE_PORT:-8815}"
+
+  registry-feature-server:
+    <<: *default-service
+    container_name: ${REGISTRY_CONTAINER_NAME:-registry-feature-server}
+    command: >
+      feast -c ${FEAST_CONFIG_DIR:-/feature_repo}
+      serve_registry --rest-api
+      -p ${REGISTRY_PORT:-6570}
+    ports:
+      - "${REGISTRY_PORT:-6570}:${REGISTRY_PORT:-6570}"
+      - "${REGISTRY_REST_PORT:-6572}:${REGISTRY_REST_PORT:-6572}"
+  
+  feast-ui:
+    <<: *default-service
+    container_name: ${FEAST_UI_CONTAINER_NAME:-feast-ui}
+    command: >
+      feast -c ${FEAST_CONFIG_DIR:-/feature_repo}
+      ui -h 0.0.0.0
+      -p ${FEAST_UI_PORT:-8888}
+      -r ${FEAST_UI_REGISTRY_TTL_SEC:-5}
+    ports:
+      - "${FEAST_UI_PORT:-8888}:${FEAST_UI_PORT:-8888}"
+
+volumes:
+  feature_repo:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${FEAST_REPO_PATH:-./feature_repo}
+      o: bind
+
+networks:
+  feature_network:
+    driver: bridge
