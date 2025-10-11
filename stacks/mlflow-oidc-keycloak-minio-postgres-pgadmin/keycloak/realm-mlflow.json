@@ -1,0 +1,73 @@
+{
+  "realm": "mlflow",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+
+  "users": [
+    {
+      "username": "admin@example.com",
+      "email": "admin@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "admin", "temporary": false }
+      ],
+      "groups": ["mlflow-users"]
+    }
+  ],
+
+  "groups": [
+    {
+      "name": "mlflow-users",
+      "path": "/mlflow-users",
+      "attributes": {}
+    }
+  ],
+
+  "clients": [
+    {
+      "clientId": "mlflow-client",
+      "name": "MLflow OIDC Client",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "mlflowsecret",
+
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+
+      "redirectUris": [
+        "http://localhost:5000/callback",
+        "http://127.0.0.1:5000/callback",
+        "http://host.docker.internal:5000/callback"
+      ],
+      "webOrigins": ["+"],
+
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      },
+
+      "defaultClientScopes": ["profile", "email", "roles", "web-origins"],
+      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"],
+
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "claim.name": "groups"
+          }
+        }
+      ]
+    }
+  ]
+}

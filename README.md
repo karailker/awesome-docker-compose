@@ -28,11 +28,13 @@ These are individual service setups that can be used as building blocks for your
 These are pre-configured setups combining multiple services for specific use cases:
 
 - **MLflow with MinIO and Postgres**: A stack for managing the machine learning lifecycle, including MinIO for object storage and Postgres for metadata storage.
+- **MLflow-OIDC with Keycloak, MinIO, and Postgres**: Enterprise MLflow setup with OpenID Connect authentication via Keycloak, object storage with MinIO, and PostgreSQL for metadata.
 
 > **Note**: ElasticAPM integration for ElasticSearch is under development and may not work properly yet. Updates are in progress.
 
 ## What next?
 - ✅ **MLFlow Stack** added to stacks
+- ✅ **MLFlow-OIDC-Keycloak Stack** added to stacks
 - ✅ **Apache Airflow** added to base
 - ⬜ **Apache Superset**
 - 🔄 **dbt Core**
