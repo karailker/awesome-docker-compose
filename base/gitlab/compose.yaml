@@ -1,0 +1,82 @@
+services:
+  postgresql:
+    image: postgres:17
+    container_name: gitlab_postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gitlab
+      POSTGRES_PASSWORD: gitlab
+      POSTGRES_DB: gitlabhq_production
+    volumes:
+      - ./postgresql:/var/lib/postgresql/data
+    networks:
+      - gitlab_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitlab -d gitlabhq_production"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: gitlab_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./redis:/data
+    networks:
+      - gitlab_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    restart: unless-stopped
+    hostname: gitlab.local
+    environment:
+      GITLAB_ROOT_PASSWORD: S3cureP@ssw0rd_2025
+      GITLAB_ROOT_EMAIL: admin@example.com
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.local'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+
+        # --- External PostgreSQL ---
+        gitlab_rails['db_adapter'] = 'postgresql'
+        gitlab_rails['db_encoding'] = 'utf8'
+        gitlab_rails['db_host'] = 'gitlab_postgresql'
+        gitlab_rails['db_port'] = 5432
+        gitlab_rails['db_username'] = 'gitlab'
+        gitlab_rails['db_password'] = 'gitlab'
+        gitlab_rails['db_database'] = 'gitlabhq_production'
+
+        # --- External Redis ---
+        gitlab_rails['redis_host'] = 'gitlab_redis'
+        gitlab_rails['redis_port'] = 6379
+
+        # Optional: set timezone
+        # gitlab_rails['time_zone'] = 'Europe/Istanbul'
+    ports:
+      - "8090:80"
+      - "8093:443"     # enable only when HTTPS is configured in Omnibus
+      - "2222:22"
+    volumes:
+      - ./config:/etc/gitlab
+      - ./logs:/var/log/gitlab
+      - ./data:/var/opt/gitlab
+    extra_hosts:
+      - "gitlab.local:127.0.0.1"   # so your host can resolve http://gitlab.local
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gitlab_network
+
+networks:
+  gitlab_network:
+    driver: bridge

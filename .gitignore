@@ -35,10 +35,6 @@ coverage/
 
 ## Project-Specific
 
-# GitLab CI/CD
-# Development in progress
-gitlab/
-
 # dbt-core
 # Development in progress
 dbt-core/

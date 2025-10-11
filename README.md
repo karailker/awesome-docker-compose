@@ -43,6 +43,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - **Prefect** - Modern workflow orchestration
 
 ### Upcoming Features
+- 🚧 **GitLab** - DevOps platform
 - ⬜ **Apache Superset** - Business intelligence web application
 - ⬜ **Great Expectations** - Data validation and profiling
 - ⬜ **BentoML** - ML model serving framework
@@ -50,7 +51,6 @@ These are pre-configured setups combining multiple services for specific use cas
 
 ### Postponed
 -  🔄 **dbt Core** - Data transformation tool
--  🔄 **GitLab** - DevOps platform
 
 ### Legend:
 - ✅ Completed  
