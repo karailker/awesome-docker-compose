@@ -32,19 +32,25 @@ These are pre-configured setups combining multiple services for specific use cas
 
 > **Note**: ElasticAPM integration for ElasticSearch is under development and may not work properly yet. Updates are in progress.
 
-## What next?
-- ✅ **MLFlow Stack** added to stacks
-- ✅ **MLFlow-OIDC-Keycloak Stack** added to stacks
-- ✅ **Apache Airflow** added to base
-- ⬜ **Apache Superset**
-- 🔄 **dbt Core**
-- ✅ **Feast**
-- ⬜ **Great Expectations**
-- ⬜ **BentoML**
-- ⬜ **Nvidia Triton**
-- ✅ **Valkey** added to base
-- ✅ **Prefect**
-- 🔄 **GitLab**
+## Roadmap
+
+### Recently Completed ✅
+- **MLFlow Stack** - Basic ML lifecycle management
+- **MLFlow-OIDC-Keycloak Stack** - Enterprise MLflow with authentication
+- **Apache Airflow** - Workflow orchestration platform
+- **Feast** - ML feature store
+- **Valkey** - Redis alternative
+- **Prefect** - Modern workflow orchestration
+
+### Upcoming Features
+- ⬜ **Apache Superset** - Business intelligence web application
+- ⬜ **Great Expectations** - Data validation and profiling
+- ⬜ **BentoML** - ML model serving framework
+- ⬜ **Nvidia Triton** - Inference server
+
+### Postponed
+-  🔄 **dbt Core** - Data transformation tool
+-  🔄 **GitLab** - DevOps platform
 
 ### Legend:
 - ✅ Completed  
