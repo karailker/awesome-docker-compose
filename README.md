@@ -30,6 +30,7 @@ These are individual service setups that can be used as building blocks for your
 - **[FastAPI Example App](base/fastapi/)**: Modern Python web framework for building high-performance APIs with automatic documentation.
 - **[InfluxDB with Telegraf](base/influxdb/)**: Time-series database optimized for IoT and monitoring data with metrics collection agent.
 - **[ClickHouse with Tabix](base/clickhouse/)**: High-performance columnar database for analytics with web-based query interface.
+- **[CockroachDB](base/cockroachdb/)**: Distributed SQL database designed for cloud-native applications with strong consistency.
 
 ### Stacks
 These are pre-configured setups combining multiple services for specific use cases:
@@ -47,6 +48,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - ✅ **[FastAPI Example App](base/fastapi/)** - Modern Python API framework
 - ✅ **[InfluxDB with Telegraf](base/influxdb/)** - Time-series database with metrics collection agent
 - ✅ **[ClickHouse with Tabix](base/clickhouse/)** - High-performance columnar analytics database
+- ✅ **[CockroachDB](base/cockroachdb/)** - Distributed SQL database for cloud-native apps
 
 ### Upcoming Features
 - 🚧 **[GitLab](base/gitlab/)** - DevOps platform
