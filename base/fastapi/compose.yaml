@@ -1,0 +1,39 @@
+services:
+  fastapi:
+    image: ${FASTAPI_IMAGE:-fastapi-example:latest}
+    container_name: fastapi
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${FASTAPI_PORT:-8000}:8000"
+    environment:
+      APP_NAME: ${APP_NAME:-FastAPI Example}
+      APP_ENV: ${APP_ENV:-production}
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+      UVICORN_LOG_LEVEL: ${UVICORN_LOG_LEVEL:-info}
+      UVICORN_PROXY_HEADERS: ${UVICORN_PROXY_HEADERS:-true}
+      UVICORN_FORWARDED_ALLOW_IPS: ${UVICORN_FORWARDED_ALLOW_IPS:-*}
+    volumes:
+      - fastapi_logs:/var/log/fastapi
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health | grep -q 'ok'"]
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      - fastapi-net
+
+volumes:
+  fastapi_logs:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./fastapi_logs
+      o: bind
+
+networks:
+  fastapi-net:
+    driver: bridge
