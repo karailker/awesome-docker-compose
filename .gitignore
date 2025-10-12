@@ -38,3 +38,7 @@ coverage/
 # dbt-core
 # Development in progress
 dbt-core/
+
+# weights-and-biases
+# Development in progress
+wandb-minio-postgres/

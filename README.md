@@ -25,6 +25,7 @@ These are individual service setups that can be used as building blocks for your
 - **[Feast](base/feast/)**: Open-source feature store for managing and serving ML features in production.
 - **[dbt Core](base/dbt-core/)**: Data transformation tool for analytics engineering.
 - **[GitLab](base/gitlab/)**: DevOps platform with integrated CI/CD, project management, and more.
+- **[SonarQube](base/sonarqube/)** - Code quality and security analysis.
 
 ### Stacks
 These are pre-configured setups combining multiple services for specific use cases:
@@ -43,6 +44,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - **[Feast](base/feast/)** - ML feature store
 - **[Valkey](base/valkey/)** - Redis alternative
 - **[Prefect](base/prefect/)** - Modern workflow orchestration
+- **[SonarQube](base/sonarqube/)** - Code quality and security analysis
 
 ### Upcoming Features
 - 🚧 **[GitLab](base/gitlab/)** - DevOps platform
@@ -50,6 +52,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - ⬜ **Great Expectations** - Data validation and profiling
 - ⬜ **BentoML** - ML model serving framework
 - ⬜ **Nvidia Triton** - Inference server
+- 🚧 **Weights & Biases** - ML experiment tracking
 
 ### Postponed
 -  🔄 **dbt Core** - Data transformation tool
