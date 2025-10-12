@@ -1,0 +1,3 @@
+influxdb_data/
+influxdb_config/
+telegraf_data/

@@ -1,0 +1,78 @@
+services:
+  influxdb:
+    image: ${INFLUXDB_IMAGE:-influxdb:2.7-alpine}
+    container_name: influxdb
+    ports:
+      - "${INFLUXDB_PORT:-8086}:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USERNAME:-admin}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD:-adminpass}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG:-my-org}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET:-default}
+      DOCKER_INFLUXDB_INIT_RETENTION: ${INFLUXDB_RETENTION:-0}   # 0 means infinite retention
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_ADMIN_TOKEN:-local-dev-token}
+      INFLUXD_REPORTING_DISABLED: ${INFLUXD_REPORTING_DISABLED:-true}
+      # INFLUXD_QUERY_SIMPLE_RESPONSE: "true"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/health | grep -q '\"status\":\"pass\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      - influx-net
+
+  telegraf:
+    image: ${TELEGRAF_IMAGE:-telegraf:1.30-alpine}
+    container_name: telegraf
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    profiles: ["telegraf"]
+    environment:
+      INFLUX_HOST: http://influxdb:8086
+      INFLUX_ORG: ${INFLUXDB_ORG:-my-org}
+      INFLUX_BUCKET: ${INFLUXDB_BUCKET:-default}
+      INFLUX_TOKEN: ${INFLUXDB_ADMIN_TOKEN:-local-dev-token}
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - telegraf_data:/var/lib/telegraf
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "telegraf --test --once >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    networks:
+      - influx-net
+
+volumes:
+  influxdb_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./influxdb_data
+      o: bind
+  influxdb_config:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./influxdb_config
+      o: bind
+  telegraf_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./telegraf_data
+      o: bind
+
+
+networks:
+  influx-net:
+    driver: bridge

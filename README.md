@@ -28,6 +28,7 @@ These are individual service setups that can be used as building blocks for your
 - **[SonarQube](base/sonarqube/)**: Code quality and security analysis platform for continuous inspection.
 - **[Sonatype Nexus](base/nexus/)**: Universal artifact repository manager for storing and distributing software components. 
 - **[FastAPI Example App](base/fastapi/)**: Modern Python web framework for building high-performance APIs with automatic documentation.
+- **[InfluxDB with Telegraf](base/influxdb/)**: Time-series database optimized for IoT and monitoring data with metrics collection agent.
 
 ### Stacks
 These are pre-configured setups combining multiple services for specific use cases:
@@ -43,6 +44,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - ✅ **[SonarQube](base/sonarqube/)** - Code quality and security analysis
 - ✅ **[Sonatype Nexus](base/nexus/)** - Artifact repository manager
 - ✅ **[FastAPI Example App](base/fastapi/)** - Modern Python API framework
+- ✅ **[InfluxDB with Telegraf](base/influxdb/)** - Time-series database with metrics collection agent
 
 ### Upcoming Features
 - 🚧 **[GitLab](base/gitlab/)** - DevOps platform
