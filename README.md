@@ -52,7 +52,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - ⬜ **Great Expectations** - Data validation and profiling
 - ⬜ **BentoML** - ML model serving framework
 - ⬜ **Nvidia Triton** - Inference server
-- 🚧 **Weights & Biases** - ML experiment tracking
+- 🚧 **[Weights & Biases](stacks/wandb-minio-postgres/)** - ML experiment tracking
 
 ### Postponed
 -  🔄 **dbt Core** - Data transformation tool
