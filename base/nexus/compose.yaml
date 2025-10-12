@@ -1,0 +1,34 @@
+services:
+  nexus:
+    image: ${NEXUS_IMAGE:-sonatype/nexus3:3.69.0}
+    container_name: nexus
+    ports:
+      - "${NEXUS_PORT:-8081}:8081"
+    environment:
+      # Root path (reverse proxy NEXUS_CONTEXT=/nexus)
+      NEXUS_CONTEXT: ${NEXUS_CONTEXT:-/}
+      INSTALL4J_ADD_VM_PARAMS: "-Xms512m -Xmx2g -XX:MaxDirectMemorySize=2g -Djava.util.prefs.userRoot=/nexus-data/javaprefs"
+      # Find admin password in nexus_data/admin.password
+    volumes:
+      - nexus_data:/nexus-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/service/rest/v1/status | grep -q 'AVAILABLE'"]
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 45s
+    networks:
+      - nexus-net
+
+volumes:
+  nexus_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./nexus_data
+      o: bind
+
+networks:
+  nexus-net:
+    driver: bridge

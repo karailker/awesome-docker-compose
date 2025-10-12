@@ -25,7 +25,8 @@ These are individual service setups that can be used as building blocks for your
 - **[Feast](base/feast/)**: Open-source feature store for managing and serving ML features in production.
 - **[dbt Core](base/dbt-core/)**: Data transformation tool for analytics engineering.
 - **[GitLab](base/gitlab/)**: DevOps platform with integrated CI/CD, project management, and more.
-- **[SonarQube](base/sonarqube/)** - Code quality and security analysis.
+- **[SonarQube](base/sonarqube/)**: Code quality and security analysis platform for continuous inspection.
+- **[Sonatype Nexus](base/nexus/)**: Universal artifact repository manager for storing and distributing software components. 
 
 ### Stacks
 These are pre-configured setups combining multiple services for specific use cases:
@@ -38,13 +39,14 @@ These are pre-configured setups combining multiple services for specific use cas
 ## Roadmap
 
 ### Recently Completed ✅
-- **[MLFlow Stack](stacks/mlflow-minio-postgres-pgadmin/)** - Basic ML lifecycle management
-- **[MLFlow-OIDC-Keycloak Stack](stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin/)** - Enterprise MLflow with authentication
-- **[Apache Airflow](base/apache-airflow/)** - Workflow orchestration platform
-- **[Feast](base/feast/)** - ML feature store
-- **[Valkey](base/valkey/)** - Redis alternative
-- **[Prefect](base/prefect/)** - Modern workflow orchestration
-- **[SonarQube](base/sonarqube/)** - Code quality and security analysis
+- ✅ **[MLFlow Stack](stacks/mlflow-minio-postgres-pgadmin/)** - Basic ML lifecycle management
+- ✅ **[MLFlow-OIDC-Keycloak Stack](stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin/)** - Enterprise MLflow with authentication
+- ✅ **[Apache Airflow](base/apache-airflow/)** - Workflow orchestration platform
+- ✅ **[Feast](base/feast/)** - ML feature store
+- ✅ **[Valkey](base/valkey/)** - Redis alternative
+- ✅ **[Prefect](base/prefect/)** - Modern workflow orchestration
+- ✅ **[SonarQube](base/sonarqube/)** - Code quality and security analysis
+- ✅ **[Sonatype Nexus](base/nexus/)** - Artifact repository manager
 
 ### Upcoming Features
 - 🚧 **[GitLab](base/gitlab/)** - DevOps platform
