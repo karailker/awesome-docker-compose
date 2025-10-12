@@ -29,6 +29,7 @@ These are individual service setups that can be used as building blocks for your
 - **[Sonatype Nexus](base/nexus/)**: Universal artifact repository manager for storing and distributing software components. 
 - **[FastAPI Example App](base/fastapi/)**: Modern Python web framework for building high-performance APIs with automatic documentation.
 - **[InfluxDB with Telegraf](base/influxdb/)**: Time-series database optimized for IoT and monitoring data with metrics collection agent.
+- **[ClickHouse with Tabix](base/clickhouse/)**: High-performance columnar database for analytics with web-based query interface.
 
 ### Stacks
 These are pre-configured setups combining multiple services for specific use cases:
@@ -45,6 +46,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - ✅ **[Sonatype Nexus](base/nexus/)** - Artifact repository manager
 - ✅ **[FastAPI Example App](base/fastapi/)** - Modern Python API framework
 - ✅ **[InfluxDB with Telegraf](base/influxdb/)** - Time-series database with metrics collection agent
+- ✅ **[ClickHouse with Tabix](base/clickhouse/)** - High-performance columnar analytics database
 
 ### Upcoming Features
 - 🚧 **[GitLab](base/gitlab/)** - DevOps platform

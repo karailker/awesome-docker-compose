@@ -1,0 +1,54 @@
+services:
+  clickhouse:
+    image: ${CLICKHOUSE_IMAGE:-clickhouse/clickhouse-server:24.8-alpine}
+    container_name: clickhouse
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"   # HTTP
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000" # Native TCP
+      - "${CLICKHOUSE_INTERSERVER_PORT:-9009}:9009" # Interserver (replication)
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-default}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-chadmin}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-chpass}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+      LANG: C.UTF-8
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+      - clickhouse_config:/etc/clickhouse-server
+    restart: unless-stopped
+    networks:
+      - clickhouse-net
+  
+  tabix:
+    image: ${TABIX_IMAGE:-spoonest/clickhouse-tabix-web-client}
+    container_name: tabix
+    ports:
+      - "${TABIX_PORT:-8124}:80"   # Tabix UI
+    restart: unless-stopped
+    networks:
+      - clickhouse-net
+
+volumes:
+  clickhouse_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./clickhouse_data
+      o: bind
+  clickhouse_logs:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./clickhouse_logs
+      o: bind
+  clickhouse_config:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./clickhouse_config
+      o: bind
+
+networks:
+  clickhouse-net:
+    driver: bridge
