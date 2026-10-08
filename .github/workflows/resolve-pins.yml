@@ -1,0 +1,31 @@
+name: Resolve image versions
+
+# Manual helper: prints the version label and digest a floating tag (for example "latest")
+# points to today, so it can be pinned. Useful for registries that are hard to query by hand.
+on:
+  workflow_dispatch:
+    inputs:
+      images:
+        description: "Space separated image references"
+        required: true
+        default: "quay.io/keycloak/keycloak:latest ghcr.io/mlflow/mlflow:latest quay.io/feastdev/feature-server:latest cgr.dev/chainguard/minio:latest"
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve
+        env:
+          IMAGES: ${{ inputs.images }}
+        run: |
+          for img in $IMAGES; do
+            echo "::group::$img"
+            docker buildx imagetools inspect "$img" | sed -n '1,6p'
+            docker buildx imagetools inspect "$img" --format '{{json .Image}}' \
+              | jq -r '.config.Labels // {} | to_entries[] | select(.key|test("version|revision|created";"i")) | "\(.key)=\(.value)"' || true
+            echo "::endgroup::"
+            echo "$img -> $(docker buildx imagetools inspect "$img" --format '{{json .Image}}' | jq -r '.config.Labels // {} | (."org.opencontainers.image.version" // .version // "unknown")')"
+          done
