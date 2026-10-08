@@ -14,6 +14,10 @@ COPY app /app
 
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-RUN mkdir -p /var/log/fastapi
+# Run as an unprivileged user
+RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin app \
+ && mkdir -p /var/log/fastapi \
+ && chown -R app:app /app /var/log/fastapi
+USER app
 
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-2} --log-level ${UVICORN_LOG_LEVEL:-info} --proxy-headers"]

@@ -1,0 +1,13 @@
+title = "awesome-docker-compose gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Accepted findings"
+# Documented development values and false positives. Real secrets must never be added here.
+paths = [
+  '''base/garage/config/garage\.toml''',     # rpc_secret / tokens are development values (README tells users to replace them)
+  '''(^|/)elasticsearch/compose\.yaml''',    # healthcheck "curl -s --cacert ..." matches the curl-auth rule
+  '''\.gitleaks-baseline\.json''',
+]

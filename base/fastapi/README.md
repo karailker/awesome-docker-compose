@@ -34,6 +34,7 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 ## Notes
 
+- The container runs as an unprivileged user (uid `10001`). With `compose.bind.yaml`, the host log directory must be writable by that uid.
 - Application code is in `app/` with pinned dependencies in `app/requirements.txt`.
 - Replace `app/` with your own project to reuse the setup.
 

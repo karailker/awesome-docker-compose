@@ -46,7 +46,18 @@ These are pre-configured setups combining multiple services for specific use cas
 
 ## Testing
 
-Every pull request runs [GitHub Actions](.github/workflows/ci.yml): YAML/JSON/shell/workflow linting, `docker compose config` for each project (with `.env.example` and with defaults only), image availability checks, container smoke tests (`docker compose up --wait`), and real S3 round trips against RustFS, SeaweedFS and Garage. Resource-hungry stacks (Elasticsearch, Milvus, SonarQube, Nexus, Prefect, Airflow, Feast and the MLflow and W&B stacks) are smoke tested weekly by [heavy-smoke.yml](.github/workflows/heavy-smoke.yml). Run a project locally with `scripts/smoke.sh base/<name>`.
+Every pull request runs [GitHub Actions](.github/workflows/ci.yml): YAML/JSON/shell/workflow linting, `docker compose config` for each project (with `.env.example` and with defaults only), image availability checks, container smoke tests (`docker compose up --wait`), and real S3 round trips against RustFS, SeaweedFS and Garage. Resource-hungry stacks (Elasticsearch, Milvus, SonarQube, Nexus, Prefect, Airflow, Feast and the MLflow and W&B stacks) are smoke tested weekly by [heavy-smoke.yml](.github/workflows/heavy-smoke.yml). Security checks run on every pull request too: gitleaks over the full history, Trivy for secrets and Dockerfile misconfiguration, and a compose policy check (no privileged containers, host networking or Docker socket mounts). A weekly workflow reports vulnerabilities in the pinned images.
+
+### Shortcuts
+
+`make help` lists them. The common ones:
+
+```sh
+make up P=base/postgres        # start a project (creates .env from .env.example)
+make smoke P=base/postgres     # start, wait until healthy, tear down (what CI does)
+make check                     # fast checks: lint, compose config, pinned versions, policy
+make secrets                   # gitleaks over the whole history
+```
 
 ## Roadmap
 
