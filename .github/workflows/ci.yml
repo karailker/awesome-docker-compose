@@ -161,7 +161,7 @@ jobs:
           for f in $(find base stacks -name compose.yaml | sort); do
             d=$(dirname "$f"); [ -f "$d/.env.example" ] && cp "$d/.env.example" "$d/.env"
             (cd "$d" && docker compose --profile '*' config --images)
-          done | sort -u | grep -v '^fastapi-example' > images.txt
+          done | sort -u | grep -vE '^(fastapi-example|awesome-compose/)' > images.txt
           rc=0
           while read -r img; do
             docker buildx imagetools inspect "$img" > /dev/null 2>&1 \
