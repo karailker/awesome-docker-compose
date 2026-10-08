@@ -1,0 +1,30 @@
+services:
+  seaweedfs:
+    image: ${SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.48}
+    container_name: seaweedfs
+    command: >
+      server -dir=/data -master.volumeSizeLimitMB=1024
+      -filer -s3 -s3.config=/etc/seaweedfs/s3.json
+    ports:
+      - "9333:9333" # Master UI
+      - "8888:8888" # Filer UI
+      - "8333:8333" # S3 API
+    volumes:
+      - seaweedfs_data:/data
+      - ./config/s3.json:/etc/seaweedfs/s3.json:ro
+    networks:
+      - seaweedfs_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9333/cluster/healthz >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+volumes:
+  seaweedfs_data:
+
+networks:
+  seaweedfs_network:
+    driver: bridge

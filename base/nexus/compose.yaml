@@ -13,7 +13,7 @@ services:
       - nexus_data:/nexus-data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/service/rest/v1/status | grep -q 'AVAILABLE'"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/service/rest/v1/status >/dev/null"]
       interval: 15s
       timeout: 5s
       retries: 30

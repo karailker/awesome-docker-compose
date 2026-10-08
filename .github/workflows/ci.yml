@@ -1,0 +1,203 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    name: Discover projects
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.find.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: find
+        run: |
+          projects=$(find base stacks -name compose.yaml -printf '%h\n' | sort | jq -R . | jq -sc .)
+          echo "projects=$projects" >> "$GITHUB_OUTPUT"
+
+  lint:
+    name: Lint YAML / JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install yamllint
+      - run: yamllint -c .yamllint.yml .
+      - name: Validate JSON files
+        run: find . -name '*.json' -not -path './.git/*' -print0 | xargs -0 -n1 python3 -m json.tool > /dev/null
+      - name: ShellCheck scripts
+        run: shellcheck scripts/*.sh base/*/*.sh
+      - name: Lint GitHub workflows
+        uses: docker://rhysd/actionlint:1.7.7
+        with:
+          args: -color
+      - name: Every project is listed in the root README
+        run: |
+          rc=0
+          for d in $(find base stacks -name compose.yaml -printf '%h\n' | sort); do
+            grep -q "]($d/)" README.md || { echo "::error::$d is not linked in README.md"; rc=1; }
+          done
+          exit $rc
+
+  validate:
+    name: Validate ${{ matrix.project }}
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.discover.outputs.projects) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare
+        run: scripts/prepare-dirs.sh "${{ matrix.project }}"
+      - name: docker compose config (with .env.example)
+        working-directory: ${{ matrix.project }}
+        run: docker compose config -q
+      - name: docker compose config (defaults only)
+        working-directory: ${{ matrix.project }}
+        run: docker compose --env-file /dev/null config -q
+      - name: Services must not use the unmaintained minio/minio image
+        run: |
+          if grep -nE 'image:.*(^|[ /])minio/(minio|mc)' "${{ matrix.project }}/compose.yaml"; then
+            echo "::error::minio/minio and minio/mc are no longer maintained, use rustfs, seaweedfs, garage or the Chainguard images"
+            exit 1
+          fi
+      - name: Required files exist
+        run: |
+          for f in README.md compose.yaml .gitignore; do
+            test -f "${{ matrix.project }}/$f" || { echo "::error::missing $f in ${{ matrix.project }}"; exit 1; }
+          done
+
+  dockerfile:
+    name: Build FastAPI image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: base/fastapi/Dockerfile
+          failure-threshold: error
+      - run: docker build -t fastapi-example:ci base/fastapi
+
+  images:
+    name: Images exist in registries
+    needs: discover
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Docker Hub (avoids anonymous rate limits)
+        if: ${{ env.DOCKERHUB_USER != '' }}
+        env:
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Check every referenced image can be resolved
+        run: |
+          for f in $(find base stacks -name compose.yaml | sort); do
+            d=$(dirname "$f"); [ -f "$d/.env.example" ] && cp "$d/.env.example" "$d/.env"
+            (cd "$d" && docker compose --profile '*' config --images)
+          done | sort -u | grep -v '^fastapi-example' > images.txt
+          rc=0
+          while read -r img; do
+            docker buildx imagetools inspect "$img" > /dev/null 2>&1 \
+              || { echo "::error::image not found: $img"; rc=1; }
+          done < images.txt
+          exit $rc
+
+  smoke:
+    name: Smoke test ${{ matrix.project }}
+    needs: [lint, validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - base/postgres
+          - base/pgvector
+          - base/mysql
+          - base/mongodb
+          - base/redis
+          - base/valkey
+          - base/rabbitmq
+          - base/minio
+          - base/qdrant
+          - base/kafka
+          - base/grafana
+          - base/influxdb
+          - base/clickhouse
+          - base/cockroachdb
+          - base/fastapi
+    steps:
+      - uses: actions/checkout@v4
+      - name: Raise vm.max_map_count
+        run: sudo sysctl -w vm.max_map_count=262144
+      - run: scripts/smoke.sh "${{ matrix.project }}" 300
+
+  s3-compat:
+    name: S3 round trip ${{ matrix.store }}
+    needs: [lint, validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - store: rustfs
+            project: base/rustfs
+            endpoint: http://localhost:9000
+            region: us-east-1
+          - store: seaweedfs
+            project: base/seaweedfs
+            endpoint: http://localhost:8333
+            region: us-east-1
+          - store: garage
+            project: base/garage
+            endpoint: http://localhost:3900
+            region: garage
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install boto3
+      - name: Start ${{ matrix.store }}
+        working-directory: ${{ matrix.project }}
+        run: |
+          scripts_dir="$GITHUB_WORKSPACE/scripts"
+          "$scripts_dir/prepare-dirs.sh" .
+          docker compose up -d --wait --wait-timeout 120
+      - name: Run S3 round trip
+        working-directory: ${{ matrix.project }}
+        run: |
+          case "${{ matrix.store }}" in
+            rustfs)    AK=rustfsadmin;    SK=rustfsadmin ;;
+            seaweedfs) AK=seaweedadmin;   SK=seaweedadmin ;;
+            garage)
+              out=$(./init.sh ci-bucket 2>/dev/null)
+              AK=$(echo "$out" | awk '/^Key ID/{print $NF; exit}')
+              SK=$(echo "$out" | awk '/^Secret key/{print $NF; exit}') ;;
+          esac
+          python3 "$GITHUB_WORKSPACE/scripts/s3-smoke.py" "${{ matrix.endpoint }}" "$AK" "$SK" "${{ matrix.region }}"
+      - name: Diagnostics on failure
+        if: failure()
+        working-directory: ${{ matrix.project }}
+        run: |
+          for c in $(docker compose ps -a -q); do
+            docker inspect -f '{{.Name}} health: {{json .State.Health}}' "$c" | cut -c1-1500
+          done
+          docker compose logs --tail=100
+      - name: Tear down
+        if: always()
+        working-directory: ${{ matrix.project }}
+        run: docker compose down -v

@@ -23,7 +23,7 @@ services:
       - prefect_network
   
   prefect_postgres:
-    image: postgres:latest
+    image: postgres:17
     container_name: prefect_postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-mydatabase}

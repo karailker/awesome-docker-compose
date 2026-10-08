@@ -1,3 +1,2 @@
-zookeeper_data/
-zookeeper_log/
 kafka_data/
+.env

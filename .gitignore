@@ -38,3 +38,6 @@ coverage/
 # dbt-core
 # Development in progress
 dbt-core/
+# Local environment and runtime data
+.env
+*_data/

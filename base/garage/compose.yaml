@@ -1,0 +1,24 @@
+services:
+  garage:
+    image: ${GARAGE_IMAGE:-dxflrs/garage:v2.4.1}
+    container_name: garage
+    ports:
+      - "3900:3900" # S3 API
+      - "3901:3901" # RPC
+      - "3902:3902" # Static website
+      - "3903:3903" # Admin API
+    volumes:
+      - ./config/garage.toml:/etc/garage.toml:ro
+      - garage_meta:/var/lib/garage/meta
+      - garage_data:/var/lib/garage/data
+    networks:
+      - garage_network
+    restart: unless-stopped
+
+volumes:
+  garage_meta:
+  garage_data:
+
+networks:
+  garage_network:
+    driver: bridge

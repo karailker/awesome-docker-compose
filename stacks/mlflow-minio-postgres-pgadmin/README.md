@@ -1,5 +1,52 @@
-docker compose --profile init up -d
-docker compose --profile init down
+# MLflow + MinIO + PostgreSQL + pgAdmin
 
-docker compose init up -d
-docker compose init down
+Self-hosted MLflow tracking server. Run metadata lives in PostgreSQL, artifacts live in MinIO (S3 API), and pgAdmin gives you a UI for the database.
+
+## Services
+
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| `mlflow` | `ghcr.io/mlflow/mlflow` | 5000 | Tracking server / UI |
+| `minio` | `cgr.dev/chainguard/minio` | 9000, 9001 | Artifact store (API, Console) |
+| `createbuckets` | `cgr.dev/chainguard/minio-client:latest-dev` | - | One-shot job that creates the `mlflow` bucket (profile `init`) |
+| `postgres` | `postgres` | internal | Backend store |
+| `pgadmin` | `elestio/pgadmin` | 5433 | Database admin UI |
+
+## Quick start
+
+```sh
+cp .env.example .env
+mkdir -p minio_data postgres_data
+docker compose up -d
+docker compose --profile init up createbuckets   # create the "mlflow" bucket (once)
+```
+
+- MLflow: <http://localhost:5000>
+- MinIO Console: <http://localhost:9001> (`MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`)
+- pgAdmin: <http://localhost:5433> (`PGADMIN_EMAIL` / `PGADMIN_PASSWORD`)
+
+Stop with `docker compose down`.
+
+## Using it from Python
+
+```python
+import os, mlflow
+os.environ["MLFLOW_S3_ENDPOINT_URL"] = "http://localhost:9000"
+os.environ["AWS_ACCESS_KEY_ID"] = "minioadmin"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "minioadmin"
+
+mlflow.set_tracking_uri("http://localhost:5000")
+with mlflow.start_run():
+    mlflow.log_param("hello", "world")
+```
+
+## Configuration
+
+See `.env.example`: MinIO credentials, PostgreSQL credentials, pgAdmin login and `AWS_REGION`.
+The Postgres credentials in the `mlflow` start command are currently the defaults (`myuser` / `mypassword` / `mydatabase`); update the `--backend-store-uri` if you change them.
+
+## Notes
+
+- The `init` profile must be passed explicitly: `docker compose --profile init ...`.
+- The MinIO image is distroless and non-root (uid `65532`); make `./minio_data` writable by it if needed.
+- Development defaults only; change all passwords before exposing the stack.
