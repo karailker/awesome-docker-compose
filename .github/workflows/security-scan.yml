@@ -1,0 +1,36 @@
+name: Security scan (images)
+
+# Weekly vulnerability report for the images and Python dependencies used by the compose files.
+# Informational: findings in upstream images are not fixable here, so the job does not fail.
+# Use the report to decide which pins to bump (Renovate opens the PRs).
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  images:
+    name: Trivy image and dependency scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Trivy
+        run: |
+          scripts/install-tool.sh trivy "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Scan Python dependencies
+        run: |
+          {
+            echo "## Python dependencies (base/fastapi)"
+            trivy fs --scanners vuln --severity HIGH,CRITICAL --quiet --format table base/fastapi/app/requirements.txt || true
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Scan images
+        run: |
+          {
+            echo "## Image vulnerabilities (HIGH and CRITICAL, unfixed included in counts)"
+            scripts/scan-images.sh
+          } >> "$GITHUB_STEP_SUMMARY"

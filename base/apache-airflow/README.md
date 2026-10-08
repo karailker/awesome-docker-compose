@@ -36,6 +36,8 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 |---|---|---|
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `mydatabase` / `myuser` / `mypassword` | Metadata database |
 | `_AIRFLOW_WWW_USER_USERNAME` / `_PASSWORD` | `airflow` / `airflow` | Initial admin user |
+| `AIRFLOW_JWT_SECRET` / `AIRFLOW_SECRET_KEY` | development placeholders | API JWT signing secret and web session key; generate your own |
+| `AIRFLOW_FERNET_KEY` | empty | Encrypts connections and variables in the database |
 | `AIRFLOW_IMAGE_NAME` | `apache/airflow:3.0.0` | Image |
 | `AIRFLOW__CORE__LOAD_EXAMPLES` | `true` | Load example DAGs |
 | `AIRFLOW_UID` | `50000` | Container user id (set to `$(id -u)` on Linux to avoid permission issues) |
@@ -46,7 +48,7 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 - Needs about 4 GB of RAM and 2 CPUs.
 - Custom settings go in `config/airflow.cfg`.
-- Set `AIRFLOW__CORE__FERNET_KEY` before storing real connections or variables.
+- **Secrets:** `config/airflow.cfg` used to contain generated keys that every clone shared. They are gone: the JWT secret, the web session key and the Fernet key now come from `AIRFLOW_JWT_SECRET`, `AIRFLOW_SECRET_KEY` and `AIRFLOW_FERNET_KEY` (see `.env.example` for how to generate them). Without a `.env` the stack uses obvious development defaults and an empty Fernet key. Set your own before storing real connections or exposing the UI.
 
 ## Data and volumes
 

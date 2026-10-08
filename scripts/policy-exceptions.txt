@@ -1,0 +1,2 @@
+# "<project> <service> <rule>  # reason" - accepted findings of scripts/check-policy.py
+base/milvus standalone unconfined # recommended by the upstream Milvus compose file

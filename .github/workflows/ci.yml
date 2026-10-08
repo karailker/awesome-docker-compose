@@ -51,6 +51,25 @@ jobs:
           done
           exit $rc
 
+  security:
+    name: Secrets, compose policy, Dockerfile scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compose policy (privileged, host network, docker.sock, capabilities)
+        run: scripts/check-policy.py
+      - name: Install gitleaks and Trivy (pinned, checksum verified)
+        run: |
+          scripts/install-tool.sh gitleaks "$RUNNER_TEMP/bin"
+          scripts/install-tool.sh trivy "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: gitleaks (full history, known findings in the baseline)
+        run: gitleaks detect --source . --config .gitleaks.toml --baseline-path .gitleaks-baseline.json --redact --no-banner
+      - name: Trivy (secrets and Dockerfile misconfiguration)
+        run: trivy fs --scanners secret,misconfig --severity HIGH,CRITICAL --skip-dirs .git --exit-code 1 --quiet .
+
   validate:
     name: Validate ${{ matrix.project }}
     needs: discover

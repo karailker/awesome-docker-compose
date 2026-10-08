@@ -12,7 +12,11 @@ x-airflow-common:
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-myuser}:${POSTGRES_PASSWORD:-mypassword}@postgres/${POSTGRES_DB:-mydatabase}
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER:-myuser}:${POSTGRES_PASSWORD:-mypassword}@postgres/${POSTGRES_DB:-mydatabase}
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
-    AIRFLOW__CORE__FERNET_KEY: ''
+    # Secrets: empty/dev defaults for local use. Generate your own for anything else (see README).
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-}
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET:-airflow-dev-jwt-secret-change-me}
+    AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY:-airflow-dev-secret-key-change-me}
+    AIRFLOW__CORE__INTERNAL_API_SECRET_KEY: ${AIRFLOW_SECRET_KEY:-airflow-dev-secret-key-change-me}
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'

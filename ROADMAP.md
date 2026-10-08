@@ -62,9 +62,14 @@ Ordered by user impact.
 2. ~~**Many images use `latest`.**~~ Fixed: every image is pinned to the version `latest` resolved to (MySQL to the 8.4 LTS), `scripts/check-pins.sh` enforces it in CI, and `renovate.json` proposes updates (the Renovate GitHub app must be enabled for the repository). Remaining floating tags are listed with a reason in `scripts/pin-exceptions.txt`: Chainguard's free tier only publishes `:latest`, and the Tabix image only has `:latest`.
 3. **MinIO is unmaintained.** `base/minio`, `base/milvus` and the three MLflow/W&B stacks still use the Chainguard MinIO build. Migrate to RustFS, SeaweedFS or Garage once those are exercised by the stacks.
 4. **Chainguard images run as non-root (uid 65532).** Data directories must be owned by that uid; every MinIO project now has a one-shot `minio-init-perms` service that fixes ownership first (found by the heavy run: Milvus' MinIO crashed with `file access denied`).
-5. **Insecure defaults.** Default passwords and tokens are documented everywhere, but nothing stops them from being published. CockroachDB runs `--insecure`.
+5. **Insecure defaults.** (partly addressed: see the security checks below) Default passwords and tokens are documented everywhere, but nothing stops them from being published. CockroachDB runs `--insecure`.
 6. **GitLab URL.** `external_url` is `http://gitlab.local` while the web UI is published on `8090`.
 7. **Healthchecks and start order.** Several images do not ship the tool the healthcheck needs (found: `wget` missing in CockroachDB, Nexus and FastAPI images). New healthchecks must be verified in CI, which `scripts/smoke.sh` now does. The same check found services that crash when started before their dependency is ready (Prefect worker), so dependencies should use `condition: service_healthy`.
+
+## Security findings fixed
+
+8. **Airflow shipped shared secrets.** `base/apache-airflow/config/airflow.cfg` contained generated `jwt_secret`, `secret_key`, `internal_api_secret_key` and `fernet_key` values that every clone of the repository shared. They are now read from `AIRFLOW_JWT_SECRET`, `AIRFLOW_SECRET_KEY` and `AIRFLOW_FERNET_KEY` (development placeholders when unset). The old values stay in the git history, so treat them as public; `.gitleaks-baseline.json` records them so that only new leaks fail CI.
+9. **FastAPI example ran as root.** The Dockerfile now creates and uses an unprivileged user (uid 10001). Host directories used with `compose.bind.yaml` must be writable by that uid.
 
 ## Proposals
 
@@ -75,8 +80,8 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 2. ~~Pin image versions and add Renovate~~ Done (see known issue 2); needs the Renovate app enabled on the repository.
 3. **Project template** (`templates/base/`): `compose.yaml`, `.env.example`, `.gitignore`, `README.md` skeleton, so new projects start consistent. Extend CI with a check that every project has the same README sections.
 4. **Contributor checklist and PR template** that mirror what CI enforces (healthcheck present, versions pinned, README sections, listed in the root README).
-5. **Security scanning**: Trivy (config and image scan) and gitleaks in CI; fail only on high severity and secrets.
-6. **Helper entrypoint** (`Makefile` or `just`): `make up p=base/postgres`, `make smoke p=...`, `make test`, so the commands in the READMEs and CI are the same.
+5. ~~Security scanning~~ Done: gitleaks (full history, baseline for old findings), Trivy for secrets and Dockerfile misconfiguration, a compose policy check, and a weekly image/dependency vulnerability report. The scans already found two real problems (see known issues 8 and 9).
+6. ~~Helper entrypoint~~ Done: `Makefile` (`make help`).
 7. **Generated project index** in the root README (from a small metadata file per project) so the list cannot drift from the directory tree.
 8. **Include-based stacks.** Compose `include:` lets stacks reuse `base/*` definitions instead of copying them (the MLflow stacks currently duplicate MinIO, Postgres and pgAdmin).
 
