@@ -9,7 +9,7 @@ These are individual service setups that can be used as building blocks for your
 
 - **[Postgres with pgAdmin](base/postgres/)**: PostgreSQL database with pgAdmin for management.
 - **[Postgres-pgVector with pgAdmin](base/pgvector/)**: PostgreSQL with pgVector extension and pgAdmin.
-- **[Kafka with Kafka UI](base/kafka/)**: Kafka message broker with a management UI.
+- **[Kafka with Kafka UI](base/kafka/)**: Single-node Kafka (KRaft, no Zookeeper) with a management UI.
 - **[MinIO](base/minio/)** *(legacy, unmaintained)*: S3-compatible object storage. The MinIO Community Edition is no longer maintained since February 2026; prefer one of the alternatives below.
 - **[RustFS](base/rustfs/)**: S3-compatible object storage written in Rust; closest drop-in MinIO replacement (Apache-2.0).
 - **[SeaweedFS](base/seaweedfs/)**: Scalable distributed storage with an S3 gateway and filer (Apache-2.0).
@@ -26,7 +26,6 @@ These are individual service setups that can be used as building blocks for your
 - **[Apache Airflow](base/apache-airflow/)**: Platform to programmatically author, schedule, and monitor workflows.
 - **[Prefect](base/prefect/)**: Workflow orchestration tool for automating and managing data workflows.
 - **[Feast](base/feast/)**: Open-source feature store for managing and serving ML features in production.
-- **[dbt Core](base/dbt-core/)**: Data transformation tool for analytics engineering.
 - **[GitLab](base/gitlab/)**: DevOps platform with integrated CI/CD, project management, and more.
 - **[SonarQube](base/sonarqube/)**: Code quality and security analysis platform for continuous inspection.
 - **[Sonatype Nexus](base/nexus/)**: Universal artifact repository manager for storing and distributing software components. 
@@ -77,11 +76,19 @@ Every pull request runs [GitHub Actions](.github/workflows/ci.yml): YAML/JSON/sh
 
 ## Usage
 
-To use any of the configurations, navigate to the respective directory and run:
+Every configuration is self-contained. Pick a directory, create your `.env`, and start it:
 
 ```sh
-docker-compose up
+cd base/postgres          # or any other directory under base/ or stacks/
+cp .env.example .env      # if the directory has one; adjust the values
+docker compose up -d
+docker compose down       # stop (add -v to remove volumes)
 ```
+
+- Optional components (admin UIs, init jobs) are behind Compose profiles, e.g. `docker compose --profile pgadmin up -d`. Each README lists the profiles.
+- Data is stored in `./<name>_data` directories or named volumes (ignored by git).
+- All credentials in `.env.example` and the compose defaults are for **local development only**: change them before exposing anything.
+- Requires Docker Compose v2 (`docker compose`).
 
 ## Contributing
 
