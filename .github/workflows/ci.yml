@@ -36,7 +36,8 @@ jobs:
       - name: Validate JSON files
         run: find . -name '*.json' -not -path './.git/*' -print0 | xargs -0 -n1 python3 -m json.tool > /dev/null
       - name: ShellCheck scripts
-        run: shellcheck scripts/*.sh base/*/*.sh stacks/*/*.sh
+        run: |
+          shellcheck scripts/*.sh base/*/*.sh stacks/*/*.sh
           shellcheck -s sh shared/*/*.sh
       - name: Lint GitHub workflows
         uses: docker://rhysd/actionlint:1.7.7
