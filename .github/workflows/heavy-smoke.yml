@@ -30,19 +30,9 @@ jobs:
           - stacks/wandb-minio-postgres
     steps:
       - uses: actions/checkout@v4
-      - run: scripts/prepare-dirs.sh "${{ matrix.project }}"
-      - name: Start stack
-        working-directory: ${{ matrix.project }}
-        run: docker compose up -d --build --wait --wait-timeout 900
-      - if: always()
-        working-directory: ${{ matrix.project }}
-        run: docker compose ps -a
-      - if: failure()
-        working-directory: ${{ matrix.project }}
-        run: docker compose logs --tail=200
-      - if: always()
-        working-directory: ${{ matrix.project }}
-        run: docker compose down -v
+      - name: Raise vm.max_map_count (Elasticsearch / SonarQube)
+        run: sudo sysctl -w vm.max_map_count=262144
+      - run: scripts/smoke.sh "${{ matrix.project }}" 900
 
   image-pull:
     name: Pull all images (detect removed/renamed tags)

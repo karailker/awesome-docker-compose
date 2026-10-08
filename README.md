@@ -10,7 +10,10 @@ These are individual service setups that can be used as building blocks for your
 - **[Postgres with pgAdmin](base/postgres/)**: PostgreSQL database with pgAdmin for management.
 - **[Postgres-pgVector with pgAdmin](base/pgvector/)**: PostgreSQL with pgVector extension and pgAdmin.
 - **[Kafka with Kafka UI](base/kafka/)**: Kafka message broker with a management UI.
-- **[MinIO](base/minio/)**: High-performance object storage service.
+- **[MinIO](base/minio/)** *(legacy, unmaintained)*: S3-compatible object storage. The MinIO Community Edition is no longer maintained since February 2026; prefer one of the alternatives below.
+- **[RustFS](base/rustfs/)**: S3-compatible object storage written in Rust; closest drop-in MinIO replacement (Apache-2.0).
+- **[SeaweedFS](base/seaweedfs/)**: Scalable distributed storage with an S3 gateway and filer (Apache-2.0).
+- **[Garage](base/garage/)**: Lightweight, self-hostable S3-compatible store by Deuxfleurs (AGPL-3.0).
 - **[Redis with RedisInsight](base/redis/)**: In-memory data store with a management UI.
 - **[Valkey](base/valkey/)**: Drop-in Redis replacement managed by the Linux Foundation.
 - **[RabbitMQ](base/rabbitmq/)**: Reliable messaging between distributed systems.
@@ -39,6 +42,10 @@ These are pre-configured setups combining multiple services for specific use cas
 - **[MLflow-OIDC with Keycloak, MinIO, and Postgres](stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin/)**: Enterprise MLflow setup with OpenID Connect authentication via Keycloak, object storage with MinIO, and PostgreSQL for metadata.
 
 > **Note**: ElasticAPM integration for ElasticSearch is under development and may not work properly yet. Updates are in progress.
+
+## Testing
+
+Every pull request runs [GitHub Actions](.github/workflows/ci.yml): YAML/JSON/shell/workflow linting, `docker compose config` for each project (with `.env.example` and with defaults only), image availability checks, container smoke tests (`docker compose up --wait`), and real S3 round trips against RustFS, SeaweedFS and Garage. Resource-hungry stacks (Elasticsearch, Milvus, SonarQube, Nexus, Prefect, Airflow, Feast and the MLflow and W&B stacks) are smoke tested weekly by [heavy-smoke.yml](.github/workflows/heavy-smoke.yml). Run a project locally with `scripts/smoke.sh base/<name>`.
 
 ## Roadmap
 

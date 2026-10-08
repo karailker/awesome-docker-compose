@@ -15,7 +15,7 @@ services:
       - cockroach_data:/cockroach/cockroach-data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health?ready=1 || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health?ready=1 >/dev/null || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 30
