@@ -41,6 +41,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - **[MLflow-OIDC with Keycloak, MinIO, and Postgres](stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin/)**: Enterprise MLflow setup with OpenID Connect authentication via Keycloak, object storage with MinIO, and PostgreSQL for metadata.
 
 - **[LGTM observability (Loki, Grafana, Tempo, Prometheus + OpenTelemetry Collector)](stacks/lgtm-observability/)**: Logs, metrics and traces through one OTLP endpoint, with provisioned data sources, trace-to-log links and an overview dashboard.
+- **[Local RAG / LLM (Ollama + Open WebUI + Qdrant)](stacks/rag-ollama-openwebui-qdrant/)**: Private chat UI with document question answering; Ollama runs the models, Qdrant stores the embeddings.
 - **[Weights & Biases Local with MinIO and MySQL](stacks/wandb-minio-postgres/)**: Self-hosted W&B experiment tracking with S3-compatible artifact storage.
 
 > **Note**: ElasticAPM integration for ElasticSearch is under development and may not work properly yet. Updates are in progress.
@@ -64,7 +65,7 @@ make secrets                   # gitleaks over the whole history
 
 The full picture (verified status of every project, blocked items, known issues and proposals) is in **[ROADMAP.md](ROADMAP.md)**. Short version:
 
-- ✅ **Done:** LGTM observability stack, SonarQube, Sonatype Nexus, FastAPI example, InfluxDB + Telegraf, ClickHouse + Tabix, CockroachDB, RustFS, SeaweedFS, Garage, Weights & Biases Local
+- ✅ **Done:** LGTM observability stack, Ollama + Open WebUI + Qdrant RAG stack, SonarQube, Sonatype Nexus, FastAPI example, InfluxDB + Telegraf, ClickHouse + Tabix, CockroachDB, RustFS, SeaweedFS, Garage, Weights & Biases Local
 - 🚧 **In progress:** [GitLab](base/gitlab/) (starts and is tested weekly; credentials and `external_url` still need work)
 - ⬜ **Pending:** Apache Superset, BentoML
 - 🔄 **Postponed:** dbt Core

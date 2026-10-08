@@ -25,6 +25,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `base/minio` | 🟡 legacy | PR smoke (starts) | MinIO Community Edition is unmaintained; Chainguard image is rebuilt from frozen source |
 | `base/prefect`, `nexus`, `sonarqube`, `apache-airflow`, `feast` | ✅ | heavy smoke | Prefect now really uses PostgreSQL (the old setting name was ignored) |
 | `stacks/mlflow-minio-postgres-pgadmin`, `mlflow-oidc-keycloak-minio-postgres-pgadmin` | ✅ | heavy smoke | start only; no tracking run or OIDC login is exercised |
+| `stacks/rag-ollama-openwebui-qdrant` | 🟡 | see note | functional test covers models, embeddings, generation, Qdrant search and an Open WebUI upload; first CI run pending, GPU override untested |
 | `stacks/lgtm-observability` | ✅ | PR smoke + functional test | trace, metric and log round trip through the collector; Grafana provisioning checked; demo profile exercised in CI |
 | `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke | UI answers; real use of W&B Local may need a license/account |
 | `base/elasticsearch` | ✅ | heavy smoke | 3-node cluster, Kibana and APM server become healthy; ingestion is not tested |
@@ -101,7 +102,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 ### New stacks
 - ~~Observability (LGTM)~~ Done (`stacks/lgtm-observability`). Follow-ups: Tempo span-metrics and service graph (metrics generator), Alertmanager with sample alert rules, container log collection (Grafana Alloy), a sample instrumented app.
 - **Data platform**: Postgres or ClickHouse + dbt + Airflow/Prefect + Superset/Metabase (this is also where dbt Core fits).
-- **RAG / LLM**: Ollama + Open WebUI + Qdrant or pgvector + Langfuse.
+- ~~RAG / LLM~~ Ollama + Open WebUI + Qdrant added (`stacks/rag-ollama-openwebui-qdrant`). Follow-ups: Langfuse for tracing, a pgvector variant, LiteLLM proxy in front of Ollama, a GPU CI runner.
 - **Streaming**: Kafka or Redpanda + Schema Registry + Kafka Connect + ClickHouse sink.
 - **Dev platform**: Gitea/Forgejo + Woodpecker + Harbor + Traefik.
 - **S3-backed stacks on the maintained stores**: MLflow and W&B variants using RustFS/SeaweedFS/Garage instead of MinIO.
