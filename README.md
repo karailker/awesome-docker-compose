@@ -17,6 +17,8 @@ These are individual service setups that can be used as building blocks for your
 - **[Redis with RedisInsight](base/redis/)**: In-memory data store with a management UI.
 - **[Valkey](base/valkey/)**: Drop-in Redis replacement managed by the Linux Foundation.
 - **[RabbitMQ](base/rabbitmq/)**: Reliable messaging between distributed systems.
+- **[Metabase](base/metabase/)**: Simple self-service BI on PostgreSQL, with a sample database to explore.
+- **[Apache Superset](base/superset/)**: BI platform with SQL Lab and dashboards on PostgreSQL + Valkey, with a sample database to explore.
 - **[Qdrant Vector DB](base/qdrant/)**: Optimized for storing and searching high-dimensional vectors.
 - **[Milvus Vector DB](base/milvus/)**: Open-source vector database for similarity search.
 - **[ElasticSearch with Kibana](base/elasticsearch/)**: Distributed search engine with Kibana for visualization.

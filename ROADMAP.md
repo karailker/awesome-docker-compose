@@ -31,6 +31,8 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `stacks/rag-ollama-openwebui-qdrant` | ✅ | heavy smoke + functional test | models download, embeddings, generation, Qdrant similarity search and an Open WebUI upload that lands in Qdrant; the GPU override is untested (no GPU runners) |
 | `stacks/lgtm-observability` | ✅ | PR smoke + functional test | trace, metric and log round trip through the collector; Grafana provisioning checked; demo profile exercised in CI |
 | `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke x3 object stores + functional test | UI answers and the bucket is writable; real use of W&B Local may need a license/account |
+| `base/metabase` | ✅ | PR smoke + functional test | setup via API, sample database added, native SQL query |
+| `base/superset` | ✅ | heavy smoke + functional test | API login, sample database registered, SQL Lab query; the image is built locally to add the PostgreSQL driver |
 | `base/elasticsearch` | ✅ | heavy smoke | 3-node cluster, Kibana and APM server become healthy; ingestion is not tested |
 | `base/milvus` | ✅ | heavy smoke x3 object stores + functional test | collection, insert and similarity search via REST |
 | `base/gitlab` | ✅ starts | heavy smoke | needs about 4 GB RAM; credentials are hard-coded and `external_url` does not match the published port |
@@ -106,7 +108,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 
 ### New stacks
 - ~~Observability (LGTM)~~ Done (`stacks/lgtm-observability`). Follow-ups: Tempo span-metrics and service graph (metrics generator), Alertmanager with sample alert rules, container log collection (Grafana Alloy), a sample instrumented app.
-- **Data platform**: Postgres or ClickHouse + dbt + Airflow/Prefect + Superset/Metabase (this is also where dbt Core fits).
+- **Data platform**: Postgres or ClickHouse + dbt + Airflow/Prefect + Superset/Metabase (the BI parts exist now as `base/superset` and `base/metabase`) (this is also where dbt Core fits).
 - ~~RAG / LLM~~ Ollama + Open WebUI + Qdrant added (`stacks/rag-ollama-openwebui-qdrant`). Follow-ups: Langfuse for tracing, a pgvector variant, LiteLLM proxy in front of Ollama, a GPU CI runner.
 - **Streaming**: Kafka or Redpanda + Schema Registry + Kafka Connect + ClickHouse sink.
 - **Dev platform**: Gitea/Forgejo + Woodpecker + Harbor + Traefik.
@@ -124,7 +126,7 @@ In rough order of value for effort:
 2. **GitLab**: generate the root password from `.env`, fix `external_url` / the published port, add a functional check (sign in through the API).
 3. **Functional tests for the heavy stacks**: MLflow (log a run and read it back), Kafka (produce/consume), Airflow (trigger an example DAG), Elasticsearch (index and search). Each one is a `smoke-test.sh`.
 4. **Project template and README section check** (proposal 3), so new projects start consistent.
-5. **Apache Superset or Metabase** (in progress) as a BI service, then the data platform stack (database + dbt + scheduler + BI).
+5. ~~**Apache Superset or Metabase** as a BI service~~ Done (`base/superset`, `base/metabase`). Next: the data platform stack (database + dbt + scheduler + BI).
 6. **Alertmanager and span-metrics for the LGTM stack**, and Langfuse / a pgvector variant for the RAG stack.
 
 ## How to propose or pick up an item

@@ -26,6 +26,7 @@ jobs:
           - base/apache-airflow
           - base/feast
           - base/gitlab
+          - base/superset
           - stacks/mlflow-minio-postgres-pgadmin
           - stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin
           - stacks/wandb-minio-postgres

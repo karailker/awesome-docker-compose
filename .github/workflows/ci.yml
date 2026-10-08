@@ -192,6 +192,7 @@ jobs:
           - base/clickhouse
           - base/cockroachdb
           - base/fastapi
+          - base/metabase
           - stacks/lgtm-observability
     steps:
       - uses: actions/checkout@v4

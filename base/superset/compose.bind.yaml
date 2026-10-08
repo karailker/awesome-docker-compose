@@ -1,0 +1,19 @@
+# Store the data in host directories instead of Docker-managed volumes.
+#
+#   mkdir -p ${DATA_DIR:-.}/postgres_data ${DATA_DIR:-.}/redis_data
+#   docker compose -f compose.yaml -f compose.bind.yaml up -d
+#
+# DATA_DIR (default: this directory) can be set in .env or the environment.
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/postgres_data
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/redis_data

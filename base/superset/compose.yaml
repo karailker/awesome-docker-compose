@@ -1,0 +1,97 @@
+x-superset: &superset
+  image: ${SUPERSET_IMAGE:-awesome-compose/superset:local} # built from ./Dockerfile (official image + PostgreSQL driver)
+  build: .
+  environment: &superset-env
+    SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-change-me-to-a-long-random-string}
+    SUPERSET_CONFIG_PATH: /app/superset_config.py
+    SUPERSET_DB: ${SUPERSET_DB:-superset}
+    POSTGRES_USER: ${POSTGRES_USER:-superset}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-superset}
+  volumes:
+    - ./superset_config.py:/app/superset_config.py:ro
+  networks:
+    - superset_network
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: superset-postgres
+    environment:
+      POSTGRES_DB: ${SUPERSET_DB:-superset}
+      POSTGRES_USER: ${POSTGRES_USER:-superset}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-superset}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro # creates the sample "analytics" database on first start
+    networks:
+      - superset_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-superset} -d ${SUPERSET_DB:-superset}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: valkey/valkey:9.1.2
+    container_name: superset-valkey
+    volumes:
+      - redis_data:/data
+    networks:
+      - superset_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  superset-init:
+    # One-shot: migrate the metadata database, create the admin user, load roles and permissions
+    <<: *superset
+    container_name: superset-init
+    command:
+      - /bin/sh
+      - -c
+      - |
+        superset db upgrade &&
+        superset fab create-admin --username "$$ADMIN_USER" --password "$$ADMIN_PASSWORD" \
+          --firstname Superset --lastname Admin --email "$$ADMIN_EMAIL" || true
+        superset init
+    environment:
+      <<: *superset-env
+      ADMIN_USER: ${SUPERSET_ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
+      ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL:-admin@example.com}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: "no"
+
+  superset:
+    <<: *superset
+    container_name: superset
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
+    ports:
+      - "${SUPERSET_PORT:-8088}:8088"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8088/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  postgres_data:
+    name: ${VOLUME_PREFIX:-superset}_postgres_data
+  redis_data:
+    name: ${VOLUME_PREFIX:-superset}_redis_data
+
+networks:
+  superset_network:
+    driver: bridge
