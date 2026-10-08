@@ -12,6 +12,7 @@ RabbitMQ message broker with the management UI.
 
 ```sh
 cp .env.example .env
+mkdir -p rabbitmq_data   # bind-mounted data directories must exist
 docker compose up -d
 ```
 

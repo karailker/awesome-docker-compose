@@ -12,6 +12,7 @@ Sonatype Nexus Repository OSS, a universal artifact repository manager (Maven, n
 
 ```sh
 cp .env.example .env
+mkdir -p nexus_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose exec nexus cat /nexus-data/admin.password   # initial admin password
 ```

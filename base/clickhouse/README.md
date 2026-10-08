@@ -13,6 +13,7 @@ ClickHouse columnar analytics database with the Tabix web SQL client.
 
 ```sh
 cp .env.example .env
+mkdir -p clickhouse_config clickhouse_data clickhouse_logs   # bind-mounted data directories must exist
 docker compose up -d
 ```
 

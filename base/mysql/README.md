@@ -14,6 +14,7 @@ MySQL with two optional admin UIs: Adminer and phpMyAdmin.
 
 ```sh
 cp .env.example .env
+mkdir -p mysql_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose --profile adminer up -d
 docker compose --profile phpmyadmin up -d

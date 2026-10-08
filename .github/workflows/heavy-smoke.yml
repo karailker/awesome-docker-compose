@@ -13,7 +13,7 @@ jobs:
   smoke:
     name: ${{ matrix.project }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -25,6 +25,7 @@ jobs:
           - base/prefect
           - base/apache-airflow
           - base/feast
+          - base/gitlab
           - stacks/mlflow-minio-postgres-pgadmin
           - stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin
           - stacks/wandb-minio-postgres

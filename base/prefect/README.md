@@ -14,6 +14,7 @@
 
 ```sh
 cp .env.example .env
+mkdir -p postgres_data   # bind-mounted data directories must exist
 docker compose up -d
 ```
 

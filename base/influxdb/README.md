@@ -13,6 +13,7 @@ InfluxDB 2 time-series database with an optional Telegraf agent that collects ho
 
 ```sh
 cp .env.example .env
+mkdir -p influxdb_config influxdb_data telegraf_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose --profile telegraf up -d    # add the Telegraf agent
 ```

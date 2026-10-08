@@ -12,6 +12,7 @@ Redis in-memory data store with an optional RedisInsight UI.
 ## Quick start
 
 ```sh
+mkdir -p redis_data redis_insight_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose --profile redis-insight up -d
 ```

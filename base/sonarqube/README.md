@@ -12,6 +12,7 @@ SonarQube Community Build for continuous code quality and security inspection, b
 ## Quick start
 
 ```sh
+mkdir -p postgres_data sonarqube_data sonarqube_extensions sonarqube_logs   # bind-mounted data directories must exist
 sudo sysctl -w vm.max_map_count=262144   # Linux hosts, required by the embedded Elasticsearch
 cp .env.example .env
 docker compose up -d

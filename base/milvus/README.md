@@ -16,6 +16,7 @@
 
 ```sh
 cp .env.example .env
+mkdir -p milvus_data/etcd milvus_data/milvus milvus_data/minio   # bind-mounted data directories must exist
 docker compose up -d
 ```
 
@@ -39,7 +40,7 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 ## Notes
 
-- The Chainguard MinIO image is distroless and non-root (uid `65532`): data directories under `./milvus_data` must be writable by it.
+- The MinIO image is distroless and runs as a non-root user (uid `65532`). The one-shot `minio-init-perms` service (busybox) fixes the ownership of the data volume before MinIO starts, so no manual `chown` is needed.
 - The MinIO container has no healthcheck; `standalone` starts after it and restarts on failure until storage is reachable.
 
 ## Stop and clean up

@@ -13,6 +13,7 @@ Single-node CockroachDB in insecure mode for development, with an optional job t
 
 ```sh
 cp .env.example .env
+mkdir -p cockroach_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose --profile init up initdb     # creates the database and user once
 ```

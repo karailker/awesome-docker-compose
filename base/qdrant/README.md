@@ -11,6 +11,7 @@
 ## Quick start
 
 ```sh
+mkdir -p qdrant_data   # bind-mounted data directories must exist
 docker compose up -d
 ```
 

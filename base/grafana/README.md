@@ -13,6 +13,7 @@ Grafana with a provisioned Prometheus data source and a sample dashboard.
 
 ```sh
 cp .env.example .env
+mkdir -p grafana_data prometheus_data   # bind-mounted data directories must exist
 docker compose up -d
 ```
 

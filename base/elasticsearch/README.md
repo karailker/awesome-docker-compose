@@ -16,6 +16,7 @@ Three-node Elasticsearch 8 cluster with TLS, Kibana and an APM server. Based on 
 ## Quick start
 
 ```sh
+mkdir -p apm_data certs_data es01_data es02_data es03_data kibana_data   # bind-mounted data directories must exist
 sudo sysctl -w vm.max_map_count=262144   # Linux hosts, required by Elasticsearch
 cp .env.example .env
 docker compose up -d

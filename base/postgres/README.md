@@ -13,6 +13,7 @@ PostgreSQL 17 with an optional pgAdmin web UI.
 
 ```sh
 cp .env.example .env
+mkdir -p postgres_data   # bind-mounted data directories must exist
 docker compose up -d                       # database only
 docker compose --profile pgadmin up -d     # database + pgAdmin
 ```

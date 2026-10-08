@@ -19,7 +19,7 @@ Apache Airflow 3 with the CeleryExecutor, PostgreSQL and Redis. Based on the [of
 
 ```sh
 cp .env.example .env
-mkdir -p dags logs plugins
+mkdir -p dags logs plugins postgres_data redis_data
 docker compose up airflow-init            # first run only
 docker compose up -d
 docker compose --profile flower up -d     # optional Celery monitor

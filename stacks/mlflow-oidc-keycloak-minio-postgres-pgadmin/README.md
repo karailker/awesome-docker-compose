@@ -41,5 +41,5 @@ The realm (`keycloak/realm-mlflow.json`) defines the `mlflow` realm, the `mlflow
 
 - First start installs `mlflow-oidc-auth` with pip, so MLflow takes a minute to become available.
 - `OAUTHLIB_INSECURE_TRANSPORT=1` and debug logging are for local development only.
-- The MinIO image is distroless and non-root (uid `65532`); make `./minio_data` writable by it if needed.
+- The MinIO image is distroless and runs as a non-root user (uid `65532`). The one-shot `minio-init-perms` service (busybox) fixes the ownership of the data volume before MinIO starts, so no manual `chown` is needed.
 - Replace all default passwords and secrets, and put the stack behind TLS, before any real use.

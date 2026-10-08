@@ -9,6 +9,7 @@ High-performance, S3-compatible object storage, using the hardened [Chainguard M
 
 | Service | Image | Ports | Purpose |
 |---------|-------|-------|---------|
+| `minio-init-perms` | `busybox:1.37` | - | One-shot: sets volume ownership for MinIO |
 | `minio` | `cgr.dev/chainguard/minio:latest` | 9000 (S3 API), 9001 (Console) | Object storage |
 
 ## Quick start
@@ -33,7 +34,7 @@ Stop: `docker compose down` (add `-v` to drop the volume definition; data stays 
 
 ## Notes
 
-- The Chainguard image is distroless and runs as a non-root user (uid `65532`): `./minio_data` must be writable by that user (`sudo chown 65532:65532 minio_data` if you see permission errors).
+- The MinIO image is distroless and runs as a non-root user (uid `65532`). The one-shot `minio-init-perms` service (busybox) fixes the ownership of the data volume before MinIO starts, so no manual `chown` is needed.
 - The image has no shell or `curl`, so no in-container healthcheck is defined. Use `mc` from `cgr.dev/chainguard/minio-client` to manage buckets.
 - Change the default credentials before exposing the ports anywhere.
 

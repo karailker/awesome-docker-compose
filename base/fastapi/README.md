@@ -12,6 +12,7 @@ Small [FastAPI](https://fastapi.tiangolo.com/) application built from a local `D
 
 ```sh
 cp .env.example .env
+mkdir -p fastapi_logs   # bind-mounted data directories must exist
 docker compose up -d --build
 ```
 

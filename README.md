@@ -40,6 +40,8 @@ These are pre-configured setups combining multiple services for specific use cas
 - **[MLflow with MinIO and Postgres](stacks/mlflow-minio-postgres-pgadmin/)**: A stack for managing the machine learning lifecycle, including MinIO for object storage and Postgres for metadata storage.
 - **[MLflow-OIDC with Keycloak, MinIO, and Postgres](stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin/)**: Enterprise MLflow setup with OpenID Connect authentication via Keycloak, object storage with MinIO, and PostgreSQL for metadata.
 
+- **[Weights & Biases Local with MinIO and MySQL](stacks/wandb-minio-postgres/)**: Self-hosted W&B experiment tracking with S3-compatible artifact storage.
+
 > **Note**: ElasticAPM integration for ElasticSearch is under development and may not work properly yet. Updates are in progress.
 
 ## Testing
@@ -48,31 +50,15 @@ Every pull request runs [GitHub Actions](.github/workflows/ci.yml): YAML/JSON/sh
 
 ## Roadmap
 
-### Recently Completed ✅
-- ✅ **[SonarQube](base/sonarqube/)** - Code quality and security analysis
-- ✅ **[Sonatype Nexus](base/nexus/)** - Artifact repository manager
-- ✅ **[FastAPI Example App](base/fastapi/)** - Modern Python API framework
-- ✅ **[InfluxDB with Telegraf](base/influxdb/)** - Time-series database with metrics collection agent
-- ✅ **[ClickHouse with Tabix](base/clickhouse/)** - High-performance columnar analytics database
-- ✅ **[CockroachDB](base/cockroachdb/)** - Distributed SQL database for cloud-native apps
+The full picture (verified status of every project, blocked items, known issues and proposals) is in **[ROADMAP.md](ROADMAP.md)**. Short version:
 
-### Upcoming Features
-- 🚧 **[GitLab](base/gitlab/)** - DevOps platform
-- ⬜ **Apache Superset** - Business intelligence web application
-- ⬜ **Great Expectations** - Data validation and profiling
-- ⬜ **BentoML** - ML model serving framework
-- ⬜ **Nvidia Triton** - Inference server
-- 🚧 **[Weights & Biases](stacks/wandb-minio-postgres/)** - ML experiment tracking
+- ✅ **Done:** SonarQube, Sonatype Nexus, FastAPI example, InfluxDB + Telegraf, ClickHouse + Tabix, CockroachDB, RustFS, SeaweedFS, Garage, Weights & Biases Local
+- 🚧 **In progress:** [GitLab](base/gitlab/) (compose exists, not yet covered by CI)
+- ⬜ **Pending:** Apache Superset, BentoML
+- 🔄 **Postponed:** dbt Core
+- ⛔ **Blocked / needs a design decision:** Nvidia Triton (GPU, huge image, not testable on hosted runners), Great Expectations (a library, not a service)
 
-### Postponed
--  🔄 **dbt Core** - Data transformation tool
-
-### Legend:
-- ✅ Completed  
-- ⬜ Pending  
-- ❌ Canceled  
-- 🔄 Postponed  
-- 🚧 In Progress 
+Legend: ✅ completed · ⬜ pending · 🔄 postponed · 🚧 in progress · ⛔ blocked
 
 ## Usage
 

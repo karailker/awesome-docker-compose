@@ -13,6 +13,7 @@ MongoDB (authentication enabled) with an optional Mongo Express web UI. Based on
 
 ```sh
 cp .env.example .env
+mkdir -p mongodb_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose --profile mongo-express up -d
 ```

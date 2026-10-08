@@ -13,6 +13,7 @@ PostgreSQL 17 with the [pgvector](https://github.com/pgvector/pgvector) extensio
 
 ```sh
 cp .env.example .env
+mkdir -p postgres_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose --profile pgadmin up -d     # optional UI
 ```

@@ -48,5 +48,5 @@ The Postgres credentials in the `mlflow` start command are currently the default
 ## Notes
 
 - The `init` profile must be passed explicitly: `docker compose --profile init ...`.
-- The MinIO image is distroless and non-root (uid `65532`); make `./minio_data` writable by it if needed.
+- The MinIO image is distroless and runs as a non-root user (uid `65532`). The one-shot `minio-init-perms` service (busybox) fixes the ownership of the data volume before MinIO starts, so no manual `chown` is needed.
 - Development defaults only; change all passwords before exposing the stack.
