@@ -1,9 +1,9 @@
 x-s3-creds: &s3-creds
-  AWS_ACCESS_KEY_ID:      ${MINIO_ROOT_USER:-minioadmin}
-  AWS_SECRET_ACCESS_KEY:  ${MINIO_ROOT_PASSWORD:-minioadmin}
+  AWS_ACCESS_KEY_ID:      ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+  AWS_SECRET_ACCESS_KEY:  ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
   AWS_REGION:             ${AWS_REGION:-us-east-1}
-  S3_ENDPOINT_URL:        http://minio:9000
-  S3_BUCKET:              ${MINIO_BUCKET_NAME:-wandb-bucket}
+  S3_ENDPOINT_URL:        http://s3:9000
+  S3_BUCKET:              ${S3_BUCKET:-wandb-bucket}
 
 services:
   wandb:
@@ -12,8 +12,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      minio:
-        condition: service_started
+      create-bucket:
+        condition: service_completed_successfully
     restart: unless-stopped
     environment:
       # --- MySQL metadata store ---
@@ -23,12 +23,12 @@ services:
       MYSQL_USER: ${MYSQL_USER:-wandbuser}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-wandbpass}
 
-      # --- Object store (MinIO / S3) ---
+      # --- Object store (RustFS / SeaweedFS / Garage, see compose.<variant>.yaml) ---
       <<: *s3-creds
       S3_SECURE: "false"              # http (TLS yok) için
       # Bazı kurulumlarda aşağıdakiler tercih edilir (ikisi de bırakıldı):
-      WANDB_S3_ENDPOINT: http://minio:9000
-      WANDB_S3_BUCKET: ${MINIO_BUCKET_NAME:-wandb-bucket}
+      WANDB_S3_ENDPOINT: http://s3:9000
+      WANDB_S3_BUCKET: ${S3_BUCKET:-wandb-bucket}
 
       # --- Opsiyonel genel ayarlar ---
       # BASE_URL bir reverse proxy arkasında çalışırken gerekir:
@@ -48,47 +48,53 @@ services:
       retries: 20
       start_period: 20s
 
-  minio-init-perms:
-    # The Chainguard MinIO image runs as uid 65532; make the data volume writable for it.
-    image: busybox:1.37
-    user: "0:0"
-    command: ["chown", "-R", "65532:65532", "/data"]
-    volumes:
-      - minio_data:/data
-    restart: "no"
-
-  minio:
-    image: cgr.dev/chainguard/minio:latest
-    container_name: minio
-    depends_on:
-      minio-init-perms:
-        condition: service_completed_successfully
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      MINIO_BROWSER_REDIRECT_URL: http://localhost:9001
-    command: server /data --console-address ":9001"
+  s3:
+    # S3-compatible object store. Default: RustFS. Switch with an override file:
+    #   -f compose.yaml -f compose.seaweedfs.yaml   or   -f compose.yaml -f compose.garage.yaml
+    # Whatever the variant, the S3 API is http://s3:9000 inside the network and on localhost:9000.
+    image: ${RUSTFS_IMAGE:-rustfs/rustfs:1.0.1}
+    container_name: s3
     ports:
       - "9000:9000"   # S3 API
-      - "9001:9001"   # Console UI
+      - "9001:9001"   # RustFS console
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
     volumes:
-      - minio_data:/data
+      - s3_data:/data
     networks:
       - wandb-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
-  createbuckets:
-    image: cgr.dev/chainguard/minio-client:latest-dev
+  create-bucket:
+    # One-shot job: creates the bucket(s) in S3_BUCKETS (space separated) if they do not exist yet.
+    image: ${AWSCLI_IMAGE:-amazon/aws-cli:2.37.11}
     depends_on:
-      minio:
-        condition: service_started
-    entrypoint: >
-      /bin/sh -c "
-        until mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin}; do sleep 2; done &&
-        mc mb -p local/${MINIO_BUCKET_NAME:-wandb-bucket} || true &&
-        mc anonymous set download local/${MINIO_BUCKET_NAME:-wandb-bucket} ||
-        echo 'Bucket ${MINIO_BUCKET_NAME:-wandb-bucket} is ready.'
-      "
-    profiles: ["init"]
+      s3:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      S3_BUCKETS: ${S3_BUCKET:-wandb-bucket}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for b in $$S3_BUCKETS; do
+          until aws --endpoint-url http://s3:9000 s3api head-bucket --bucket "$$b" 2>/dev/null \
+             || aws --endpoint-url http://s3:9000 s3 mb "s3://$$b"; do sleep 2; done
+          echo "bucket $$b is ready"
+        done
     networks:
       - wandb-net
     restart: "no"
@@ -123,8 +129,8 @@ services:
 volumes:
   wandb_data:
     name: ${VOLUME_PREFIX:-wandb-minio-postgres}_wandb_data
-  minio_data:
-    name: ${VOLUME_PREFIX:-wandb-minio-postgres}_minio_data
+  s3_data:
+    name: ${VOLUME_PREFIX:-wandb-minio-postgres}_s3_data
   mysql_data:
     name: ${VOLUME_PREFIX:-wandb-minio-postgres}_mysql_data
 

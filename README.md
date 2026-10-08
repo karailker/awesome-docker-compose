@@ -37,12 +37,12 @@ These are individual service setups that can be used as building blocks for your
 ### Stacks
 These are pre-configured setups combining multiple services for specific use cases:
 
-- **[MLflow with MinIO and Postgres](stacks/mlflow-minio-postgres-pgadmin/)**: A stack for managing the machine learning lifecycle, including MinIO for object storage and Postgres for metadata storage.
-- **[MLflow-OIDC with Keycloak, MinIO, and Postgres](stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin/)**: Enterprise MLflow setup with OpenID Connect authentication via Keycloak, object storage with MinIO, and PostgreSQL for metadata.
+- **[MLflow with S3 store (RustFS/SeaweedFS/Garage) and Postgres](stacks/mlflow-minio-postgres-pgadmin/)**: A stack for managing the machine learning lifecycle, including an S3-compatible object store (RustFS by default) and Postgres for metadata storage.
+- **[MLflow-OIDC with Keycloak, S3 store, and Postgres](stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin/)**: Enterprise MLflow setup with OpenID Connect authentication via Keycloak, object storage on RustFS/SeaweedFS/Garage, and PostgreSQL for metadata.
 
 - **[LGTM observability (Loki, Grafana, Tempo, Prometheus + OpenTelemetry Collector)](stacks/lgtm-observability/)**: Logs, metrics and traces through one OTLP endpoint, with provisioned data sources, trace-to-log links and an overview dashboard.
 - **[Local RAG / LLM (Ollama + Open WebUI + Qdrant)](stacks/rag-ollama-openwebui-qdrant/)**: Private chat UI with document question answering; Ollama runs the models, Qdrant stores the embeddings.
-- **[Weights & Biases Local with MinIO and MySQL](stacks/wandb-minio-postgres/)**: Self-hosted W&B experiment tracking with S3-compatible artifact storage.
+- **[Weights & Biases Local with S3 store and MySQL](stacks/wandb-minio-postgres/)**: Self-hosted W&B experiment tracking with S3-compatible artifact storage.
 
 > **Note**: ElasticAPM integration for ElasticSearch is under development and may not work properly yet. Updates are in progress.
 

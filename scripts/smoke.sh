@@ -15,6 +15,11 @@ dir=$1; timeout=${2:-300}
 root=$(cd "$(dirname "$0")/.." && pwd)
 # SMOKE_BIND=1 runs the project with host directories (compose.bind.yaml) instead of named volumes
 if [ "${SMOKE_BIND:-}" = "1" ]; then export COMPOSE_FILE=compose.yaml:compose.bind.yaml BIND=1; fi
+# SMOKE_VARIANT=<name> adds compose.<name>.yaml (e.g. the seaweedfs/garage object-store variants)
+if [ -n "${SMOKE_VARIANT:-}" ]; then
+  if [ ! -f "$dir/compose.$SMOKE_VARIANT.yaml" ]; then echo "$dir has no variant '$SMOKE_VARIANT' - skipping"; exit 0; fi
+  export COMPOSE_FILE="${COMPOSE_FILE:-compose.yaml}:compose.$SMOKE_VARIANT.yaml"
+fi
 "$root/scripts/prepare-dirs.sh" "$dir"
 cd "$dir" || exit 1
 

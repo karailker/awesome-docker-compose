@@ -18,42 +18,68 @@ services:
       timeout: 20s
       retries: 3
 
-  minio-init-perms:
-    # The Chainguard MinIO image runs as uid 65532; make the data volume writable for it.
-    image: busybox:1.37
-    user: "0:0"
-    command: ["chown", "-R", "65532:65532", "/minio_data"]
-    volumes:
-      - minio_data:/minio_data
-    restart: "no"
-
-  minio:
-    image: cgr.dev/chainguard/minio:latest
-    container_name: milvus-minio
-    depends_on:
-      minio-init-perms:
-        condition: service_completed_successfully
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
-      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
-    volumes:
-      - minio_data:/minio_data
-    command: server /minio_data --console-address ":9001"
+  s3:
+    # S3-compatible object store. Default: RustFS. Switch with an override file:
+    #   -f compose.yaml -f compose.seaweedfs.yaml   or   -f compose.yaml -f compose.garage.yaml
+    # Whatever the variant, the S3 API is http://s3:9000 inside the network and on localhost:9000.
+    image: ${RUSTFS_IMAGE:-rustfs/rustfs:1.0.1}
+    container_name: milvus-s3
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # RustFS console
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+    volumes:
+      - s3_data:/data
     networks:
       - milvus_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  create-bucket:
+    # One-shot job: creates the bucket(s) in S3_BUCKETS (space separated) if they do not exist yet.
+    image: ${AWSCLI_IMAGE:-amazon/aws-cli:2.37.11}
+    depends_on:
+      s3:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      S3_BUCKETS: ${S3_BUCKET:-a-bucket}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for b in $$S3_BUCKETS; do
+          until aws --endpoint-url http://s3:9000 s3api head-bucket --bucket "$$b" 2>/dev/null \
+             || aws --endpoint-url http://s3:9000 s3 mb "s3://$$b"; do sleep 2; done
+          echo "bucket $$b is ready"
+        done
+    networks:
+      - milvus_network
+    restart: "no"
 
   standalone:
     image: milvusdb/milvus:v2.5.7
     container_name: milvus-standalone
     environment:
       - ETCD_ENDPOINTS=${ETCD_ENDPOINTS:-etcd:2379}
-      - MINIO_ADDRESS=${MINIO_ADDRESS:-minio:9000}
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
-      - MINIO_REGION=${MINIO_REGION:-us-east-1}
+      # Milvus calls its object store "MinIO"; any S3-compatible service works
+      - MINIO_ADDRESS=${S3_ADDRESS:-s3:9000}
+      - MINIO_ACCESS_KEY_ID=${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      - MINIO_SECRET_ACCESS_KEY=${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+      - MINIO_BUCKET_NAME=${S3_BUCKET:-a-bucket}
+      - MINIO_REGION=${AWS_REGION:-us-east-1}
     volumes:
       - milvus_data:/var/lib/milvus
     command: ["milvus", "run", "standalone"]
@@ -65,8 +91,8 @@ services:
     depends_on:
       etcd:
         condition: service_healthy
-      minio:
-        condition: service_started
+      create-bucket:
+        condition: service_completed_successfully
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
@@ -80,8 +106,8 @@ services:
 volumes:
   etcd_data:
     name: ${VOLUME_PREFIX:-milvus}_etcd_data
-  minio_data:
-    name: ${VOLUME_PREFIX:-milvus}_minio_data
+  s3_data:
+    name: ${VOLUME_PREFIX:-milvus}_s3_data
   milvus_data:
     name: ${VOLUME_PREFIX:-milvus}_milvus_data
 

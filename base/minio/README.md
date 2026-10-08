@@ -1,7 +1,7 @@
 # MinIO
 
 > **Project status:** the open-source MinIO Community Edition is **no longer maintained**. MinIO, Inc. stopped distributing binaries and images in late 2025, put the repository in maintenance mode, and in February 2026 declared it unmaintained (no features, bug fixes or security patches). Development continues only in the commercial **AIStor** product.
-> The Chainguard image used here is rebuilt from that frozen source, so treat this setup as legacy and prefer one of the maintained alternatives: **[RustFS](../rustfs/)**, **[SeaweedFS](../seaweedfs/)** or **[Garage](../garage/)**. See [Choosing an S3 store](#alternatives) below.
+> The Chainguard image used here is rebuilt from that frozen source, so treat this setup as legacy (Milvus, MLflow and W&B no longer use it; they ship RustFS, SeaweedFS and Garage variants) and prefer one of the maintained alternatives: **[RustFS](../rustfs/)**, **[SeaweedFS](../seaweedfs/)** or **[Garage](../garage/)**. See [Choosing an S3 store](#alternatives) below.
 
 High-performance, S3-compatible object storage, using the hardened [Chainguard MinIO image](https://images.chainguard.dev/directory/image/minio/overview) (`cgr.dev/chainguard/minio`).
 

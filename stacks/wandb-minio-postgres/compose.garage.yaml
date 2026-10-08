@@ -1,0 +1,44 @@
+# Garage instead of RustFS:  docker compose -f compose.yaml -f compose.garage.yaml up -d
+# (or COMPOSE_FILE=compose.yaml:compose.garage.yaml)
+#
+# Garage needs a one-time bootstrap (cluster layout, access key, buckets) which the garage-init job
+# does through the admin API. Garage only accepts keys of the form GK + 24 hex characters and a
+# 64 hex character secret - the defaults for S3_ACCESS_KEY / S3_SECRET_KEY already are.
+services:
+  s3:
+    image: ${GARAGE_IMAGE:-dxflrs/garage:v2.4.1}
+    command: !reset null
+    environment: !reset null
+    ports: !override
+      - "9000:9000"   # S3 API
+      - "3903:3903"   # Admin API
+    volumes: !override
+      - ../../shared/s3/garage.toml:/etc/garage.toml:ro
+      - s3_data:/var/lib/garage
+    # the Garage image is distroless (no shell/curl), so there is no container healthcheck;
+    # garage-init waits for the admin API instead
+    healthcheck: !override
+      disable: true
+
+  garage-init:
+    image: ${CURL_IMAGE:-curlimages/curl:8.22.0}
+    depends_on:
+      s3:
+        condition: service_started
+    environment:
+      GARAGE_HOST: s3
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:-dev-admin-token-change-me}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+      S3_BUCKETS: ${S3_BUCKET:-wandb-bucket}
+    entrypoint: ["/bin/sh", "/garage-init.sh"]
+    volumes:
+      - ../../shared/s3/garage-init.sh:/garage-init.sh:ro
+    networks:
+      - wandb-net
+    restart: "no"
+
+  create-bucket:
+    depends_on: !override
+      garage-init:
+        condition: service_completed_successfully

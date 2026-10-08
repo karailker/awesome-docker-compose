@@ -26,19 +26,20 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `base/rustfs`, `seaweedfs`, `garage` | ✅ | PR smoke + S3 round trip | maintained S3 stores |
 | `base/minio` | 🟡 legacy | PR smoke (starts) | MinIO Community Edition is unmaintained; Chainguard image is rebuilt from frozen source |
 | `base/prefect`, `nexus`, `sonarqube`, `apache-airflow`, `feast` | ✅ | heavy smoke | Prefect now really uses PostgreSQL (the old setting name was ignored) |
-| `stacks/mlflow-minio-postgres-pgadmin`, `mlflow-oidc-keycloak-minio-postgres-pgadmin` | ✅ | heavy smoke | start only; no tracking run or OIDC login is exercised |
+| `stacks/mlflow-minio-postgres-pgadmin` | ✅ | heavy smoke x3 object stores + functional test | RustFS (default), SeaweedFS, Garage; logs a run with an artifact and reads it back |
+| `stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin` | ✅ | heavy smoke x3 object stores + functional test | bucket write/read/delete; the OIDC login itself is not exercised |
 | `stacks/rag-ollama-openwebui-qdrant` | ✅ | heavy smoke + functional test | models download, embeddings, generation, Qdrant similarity search and an Open WebUI upload that lands in Qdrant; the GPU override is untested (no GPU runners) |
 | `stacks/lgtm-observability` | ✅ | PR smoke + functional test | trace, metric and log round trip through the collector; Grafana provisioning checked; demo profile exercised in CI |
-| `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke | UI answers; real use of W&B Local may need a license/account |
+| `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke x3 object stores + functional test | UI answers and the bucket is writable; real use of W&B Local may need a license/account |
 | `base/elasticsearch` | ✅ | heavy smoke | 3-node cluster, Kibana and APM server become healthy; ingestion is not tested |
-| `base/milvus` | ✅ | heavy smoke | needed the MinIO permission fix; no collection is created yet |
+| `base/milvus` | ✅ | heavy smoke x3 object stores + functional test | collection, insert and similarity search via REST |
 | `base/gitlab` | ✅ starts | heavy smoke | needs about 4 GB RAM; credentials are hard-coded and `external_url` does not match the published port |
 
 ## Roadmap items
 
 ### Done ✅
 - SonarQube, Sonatype Nexus, FastAPI example, InfluxDB + Telegraf, ClickHouse + Tabix, CockroachDB
-- RustFS, SeaweedFS, Garage (replacing unmaintained MinIO)
+- RustFS, SeaweedFS, Garage (replacing unmaintained MinIO); Milvus, both MLflow stacks and W&B migrated, each with RustFS (default), SeaweedFS and Garage variants (`compose.<variant>.yaml`)
 - Weights & Biases Local stack (starts and serves the UI)
 - LGTM observability stack (Loki, Grafana, Tempo, Prometheus, OpenTelemetry Collector) with a functional round-trip test
 - Local RAG stack (Ollama, Open WebUI, Qdrant) with a functional test from model download to a document landing in Qdrant
@@ -67,8 +68,8 @@ Ordered by user impact.
 
 1. ~~**Bind volumes need pre-created directories.**~~ Fixed: data now lives in named volumes (`<VOLUME_PREFIX>_<volume>`), and every project has a `compose.bind.yaml` override for host directories. CI validates the override for every project and runs a bind-mode smoke test for Postgres, MongoDB and Qdrant.
 2. ~~**Many images use `latest`.**~~ Fixed: every image is pinned to the version `latest` resolved to (MySQL to the 8.4 LTS), `scripts/check-pins.sh` enforces it in CI, and `renovate.json` proposes updates (the Renovate GitHub app must be enabled for the repository). Remaining floating tags are listed with a reason in `scripts/pin-exceptions.txt`: Chainguard's free tier only publishes `:latest`, and the Tabix image only has `:latest`.
-3. **MinIO is unmaintained.** `base/minio`, `base/milvus` and the three MLflow/W&B stacks still use the Chainguard MinIO build. Migrate to RustFS, SeaweedFS or Garage once those are exercised by the stacks.
-4. **Chainguard images run as non-root (uid 65532).** Data directories must be owned by that uid; every MinIO project now has a one-shot `minio-init-perms` service that fixes ownership first (found by the heavy run: Milvus' MinIO crashed with `file access denied`).
+3. ~~**MinIO is unmaintained.**~~ Migrated: Milvus, both MLflow stacks and W&B run on RustFS, SeaweedFS or Garage (see `shared/s3/`). Only the clearly marked legacy `base/minio` still uses the Chainguard MinIO build.
+4. **Chainguard images run as non-root (uid 65532).** Only `base/minio` is left on one; its `minio-init-perms` service fixes the volume ownership (found by the heavy run: Milvus' MinIO crashed with `file access denied`).
 5. **Insecure defaults.** (partly addressed: see the security checks below) Default passwords and tokens are documented everywhere, but nothing stops them from being published. CockroachDB runs `--insecure`.
 6. **GitLab URL.** `external_url` is `http://gitlab.local` while the web UI is published on `8090`.
 7. **Healthchecks and start order.** Several images do not ship the tool the healthcheck needs (found: `wget` missing in CockroachDB, Nexus and FastAPI images). New healthchecks must be verified in CI, which `scripts/smoke.sh` now does. The same check found services that crash when started before their dependency is ready (Prefect worker), so dependencies should use `condition: service_healthy`.
@@ -109,7 +110,6 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 - ~~RAG / LLM~~ Ollama + Open WebUI + Qdrant added (`stacks/rag-ollama-openwebui-qdrant`). Follow-ups: Langfuse for tracing, a pgvector variant, LiteLLM proxy in front of Ollama, a GPU CI runner.
 - **Streaming**: Kafka or Redpanda + Schema Registry + Kafka Connect + ClickHouse sink.
 - **Dev platform**: Gitea/Forgejo + Woodpecker + Harbor + Traefik.
-- **S3-backed stacks on the maintained stores**: MLflow and W&B variants using RustFS/SeaweedFS/Garage instead of MinIO.
 
 ### Testing improvements
 - Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for the LGTM and RAG stacks). Next candidates: log an MLflow run and read it back, produce/consume on Kafka (Kafka was done by hand), run a query on each database, ingest a trace into the APM server.
@@ -120,11 +120,11 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 
 In rough order of value for effort:
 
-1. **Move the MinIO users to a maintained store** (MLflow x2, W&B, Milvus, `base/minio`): RustFS or SeaweedFS are already exercised by an S3 round trip in CI. Removes the last dependency on the frozen MinIO source and the `minio-init-perms` workaround.
+1. ~~**Move the MinIO users to a maintained store**~~ Done. Follow-up: decide when to delete `base/minio`, and use `include:` to share the `s3`/`create-bucket` definition instead of copying it into four projects.
 2. **GitLab**: generate the root password from `.env`, fix `external_url` / the published port, add a functional check (sign in through the API).
 3. **Functional tests for the heavy stacks**: MLflow (log a run and read it back), Kafka (produce/consume), Airflow (trigger an example DAG), Elasticsearch (index and search). Each one is a `smoke-test.sh`.
 4. **Project template and README section check** (proposal 3), so new projects start consistent.
-5. **Apache Superset or Metabase** as a BI service, then the data platform stack (database + dbt + scheduler + BI).
+5. **Apache Superset or Metabase** (in progress) as a BI service, then the data platform stack (database + dbt + scheduler + BI).
 6. **Alertmanager and span-metrics for the LGTM stack**, and Langfuse / a pgvector variant for the RAG stack.
 
 ## How to propose or pick up an item

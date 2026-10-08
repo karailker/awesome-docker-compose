@@ -37,6 +37,7 @@ jobs:
         run: find . -name '*.json' -not -path './.git/*' -print0 | xargs -0 -n1 python3 -m json.tool > /dev/null
       - name: ShellCheck scripts
         run: shellcheck scripts/*.sh base/*/*.sh stacks/*/*.sh
+          shellcheck -s sh shared/*/*.sh
       - name: Lint GitHub workflows
         uses: docker://rhysd/actionlint:1.7.7
         with:
@@ -88,6 +89,16 @@ jobs:
       - name: docker compose config (defaults only)
         working-directory: ${{ matrix.project }}
         run: docker compose --env-file /dev/null config -q
+      - name: Variant override files (compose.<variant>.yaml) are valid
+        working-directory: ${{ matrix.project }}
+        run: |
+          for f in compose.*.yaml; do
+            [ "$f" = compose.bind.yaml ] && continue
+            [ -e "$f" ] || continue
+            echo "checking $f"
+            docker compose -f compose.yaml -f "$f" config -q
+            docker compose --env-file /dev/null -f compose.yaml -f "$f" config -q
+          done
       - name: Services must not use the unmaintained minio/minio image
         run: |
           if grep -nE 'image:.*(^|[ /])minio/(minio|mc)' "${{ matrix.project }}/compose.yaml"; then
