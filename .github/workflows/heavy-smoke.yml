@@ -1,0 +1,62 @@
+name: Heavy stacks smoke test
+
+# Resource-hungry stacks: run weekly and on demand, not on every PR.
+on:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - base/elasticsearch
+          - base/milvus
+          - base/sonarqube
+          - base/nexus
+          - base/prefect
+          - base/apache-airflow
+          - base/feast
+          - stacks/mlflow-minio-postgres-pgadmin
+          - stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin
+          - stacks/wandb-minio-postgres
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/prepare-dirs.sh "${{ matrix.project }}"
+      - name: Start stack
+        working-directory: ${{ matrix.project }}
+        run: docker compose up -d --build --wait --wait-timeout 900
+      - if: always()
+        working-directory: ${{ matrix.project }}
+        run: docker compose ps -a
+      - if: failure()
+        working-directory: ${{ matrix.project }}
+        run: docker compose logs --tail=200
+      - if: always()
+        working-directory: ${{ matrix.project }}
+        run: docker compose down -v
+
+  image-pull:
+    name: Pull all images (detect removed/renamed tags)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull images for every project
+        run: |
+          rc=0
+          for f in $(find base stacks -name compose.yaml | sort); do
+            d=$(dirname "$f")
+            scripts/prepare-dirs.sh "$d"
+            echo "::group::$d"
+            (cd "$d" && docker compose pull --ignore-buildable --quiet) || { echo "::error::image pull failed in $d"; rc=1; }
+            echo "::endgroup::"
+          done
+          exit $rc

@@ -1,0 +1,10 @@
+extends: relaxed
+rules:
+  line-length: disable
+  truthy: disable
+  indentation:
+    spaces: consistent
+    indent-sequences: consistent
+  new-line-at-end-of-file: disable
+  trailing-spaces: disable
+  colons: {max-spaces-after: -1}
