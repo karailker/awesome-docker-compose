@@ -29,10 +29,28 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 | `POSTGRES_DB` | `mydatabase` | Database (`.env.example` uses `mydb`) |
 | `POSTGRES_USER` | `myuser` | Database user |
 | `POSTGRES_PASSWORD` | `mypassword` | Database password |
+| `PREFECT_IMAGE` | `prefecthq/prefect:3-latest` | Server and worker image (pin a version) |
 
 ## Notes
 
-- The worker polls the `default` work pool; create it in the UI or with `prefect work-pool create default`.
+- The server uses PostgreSQL through `PREFECT_API_DATABASE_CONNECTION_URL`, waits for the database to be healthy, and the worker waits for the server's `/api/health`.
+- The worker polls the `default` work pool; `--type process` makes the worker create the pool (a `process` work pool) on first start.
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `postgres_data` | `prefect_postgres_data` | `prefect_postgres:/var/lib/postgresql/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `prefect`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p postgres_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Stop and clean up
 

@@ -26,6 +26,7 @@ services:
 
 volumes:
   rustfs_data:
+    name: ${VOLUME_PREFIX:-rustfs}_rustfs_data
 
 networks:
   rustfs_network:

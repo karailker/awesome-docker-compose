@@ -27,7 +27,26 @@ docker compose logs -f gitlab      # wait for "gitlab Reconfigured!" / healthy
 
 - The hostname is `gitlab.local` and `external_url` is `http://gitlab.local`; add `127.0.0.1 gitlab.local` to your hosts file for clone URLs to resolve.
 - Credentials are hard-coded in `compose.yaml`: change them before real use.
-- Data is bind-mounted to `./config`, `./logs`, `./data`, `./postgresql` and `./redis`.
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `gitlab_config` | `gitlab_gitlab_config` | `gitlab:/etc/gitlab` |
+| `gitlab_data` | `gitlab_gitlab_data` | `gitlab:/var/opt/gitlab` |
+| `gitlab_logs` | `gitlab_gitlab_logs` | `gitlab:/var/log/gitlab` |
+| `postgresql_data` | `gitlab_postgresql_data` | `postgresql:/var/lib/postgresql/data` |
+| `redis_data` | `gitlab_redis_data` | `redis:/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `gitlab`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p postgresql redis config logs data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Stop and clean up
 

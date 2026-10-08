@@ -42,15 +42,27 @@ services:
     networks:
       - wandb-net
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz > /dev/null || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 20
       start_period: 20s
 
+  minio-init-perms:
+    # The Chainguard MinIO image runs as uid 65532; make the data volume writable for it.
+    image: busybox:1.37
+    user: "0:0"
+    command: ["chown", "-R", "65532:65532", "/data"]
+    volumes:
+      - minio_data:/data
+    restart: "no"
+
   minio:
     image: cgr.dev/chainguard/minio:latest
     container_name: minio
+    depends_on:
+      minio-init-perms:
+        condition: service_completed_successfully
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -110,11 +122,11 @@ services:
 
 volumes:
   wandb_data:
-    driver: local
+    name: ${VOLUME_PREFIX:-wandb-minio-postgres}_wandb_data
   minio_data:
-    driver: local
+    name: ${VOLUME_PREFIX:-wandb-minio-postgres}_minio_data
   mysql_data:
-    driver: local
+    name: ${VOLUME_PREFIX:-wandb-minio-postgres}_mysql_data
 
 networks:
   wandb-net:

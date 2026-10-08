@@ -1,0 +1,25 @@
+# Store the data in host directories instead of Docker-managed volumes.
+#
+#   mkdir -p ${DATA_DIR:-.}/influxdb_data ${DATA_DIR:-.}/influxdb_config ${DATA_DIR:-.}/telegraf_data
+#   docker compose -f compose.yaml -f compose.bind.yaml up -d
+#
+# DATA_DIR (default: this directory) can be set in .env or the environment.
+volumes:
+  influxdb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/influxdb_data
+  influxdb_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/influxdb_config
+  telegraf_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/telegraf_data

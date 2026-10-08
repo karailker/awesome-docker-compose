@@ -38,11 +38,7 @@ services:
   
 volumes:
   mongodb_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./mongodb_data
-      o: bind
+    name: ${VOLUME_PREFIX:-mongodb}_mongodb_data
 
 networks:
   mongodb-network:

@@ -54,23 +54,11 @@ services:
 
 volumes:
   influxdb_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./influxdb_data
-      o: bind
+    name: ${VOLUME_PREFIX:-influxdb}_influxdb_data
   influxdb_config:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./influxdb_config
-      o: bind
+    name: ${VOLUME_PREFIX:-influxdb}_influxdb_config
   telegraf_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./telegraf_data
-      o: bind
+    name: ${VOLUME_PREFIX:-influxdb}_telegraf_data
 
 
 networks:

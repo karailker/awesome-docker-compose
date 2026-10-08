@@ -311,14 +311,6 @@ networks:
 
 volumes:
   postgres_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./postgres_data
-      o: bind
+    name: ${VOLUME_PREFIX:-apache-airflow}_postgres_data
   redis_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./redis_data
-      o: bind
+    name: ${VOLUME_PREFIX:-apache-airflow}_redis_data

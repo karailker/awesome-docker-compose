@@ -44,6 +44,27 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 - Needs several GB of free RAM (3 Elasticsearch nodes + Kibana + APM).
 - Change both passwords before exposing the stack.
 
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `apm_data` | `elasticsearch_apm_data` | `apm-server:/usr/share/apm-server/data` |
+| `certs_data` | `elasticsearch_certs_data` | `apm-server:/usr/share/apm-server/config/certs`, `es01:/usr/share/elasticsearch/config/certs`, `es02:/usr/share/elasticsearch/config/certs`, `es03:/usr/share/elasticsearch/config/certs`, `kibana:/usr/share/kibana/config/certs`, `setup:/usr/share/elasticsearch/config/certs` |
+| `es01_data` | `elasticsearch_es01_data` | `es01:/usr/share/elasticsearch/data` |
+| `es02_data` | `elasticsearch_es02_data` | `es02:/usr/share/elasticsearch/data` |
+| `es03_data` | `elasticsearch_es03_data` | `es03:/usr/share/elasticsearch/data` |
+| `kibana_data` | `elasticsearch_kibana_data` | `kibana:/usr/share/kibana/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `elasticsearch`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p es01_data es02_data es03_data kibana_data certs_data apm_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
+
 ## Stop and clean up
 
 ```sh

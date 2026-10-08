@@ -73,6 +73,25 @@ jobs:
             echo "::error::minio/minio and minio/mc are no longer maintained, use rustfs, seaweedfs, garage or the Chainguard images"
             exit 1
           fi
+      - name: Volumes are named volumes (no bind driver_opts in compose.yaml)
+        run: |
+          if grep -nE 'device: *\./' "${{ matrix.project }}/compose.yaml"; then
+            echo "::error::use named volumes in compose.yaml; host directories belong in compose.bind.yaml"
+            exit 1
+          fi
+      - name: compose.bind.yaml exists and is valid
+        working-directory: ${{ matrix.project }}
+        run: |
+          if grep -q '^volumes:' compose.yaml && ! grep -q 'o: bind' compose.yaml; then
+            test -f compose.bind.yaml || { echo "::error::compose.bind.yaml missing"; exit 1; }
+          fi
+          if [ -f compose.bind.yaml ]; then
+            docker compose -f compose.yaml -f compose.bind.yaml config -q
+            # every volume must be overridden, otherwise it silently stays a named volume
+            for v in $(docker compose config --format json | python3 -c 'import json,sys;print(" ".join(json.load(sys.stdin).get("volumes",{})))'); do
+              grep -qE "^  $v:" compose.bind.yaml || { echo "::error::volume $v is missing from compose.bind.yaml"; exit 1; }
+            done
+          fi
       - name: Required files exist
         run: |
           for f in README.md compose.yaml .gitignore; do
@@ -146,6 +165,22 @@ jobs:
       - name: Raise vm.max_map_count
         run: sudo sysctl -w vm.max_map_count=262144
       - run: scripts/smoke.sh "${{ matrix.project }}" 300
+
+  bind-mode:
+    name: Host directories (compose.bind.yaml) ${{ matrix.project }}
+    needs: [lint, validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - base/postgres
+          - base/mongodb
+          - base/qdrant
+    steps:
+      - uses: actions/checkout@v4
+      - run: SMOKE_BIND=1 scripts/smoke.sh "${{ matrix.project }}" 300
 
   s3-compat:
     name: S3 round trip ${{ matrix.store }}

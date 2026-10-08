@@ -16,11 +16,7 @@ services:
 
 volumes:
   rabbitmq_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./rabbitmq_data
-      o: bind
+    name: ${VOLUME_PREFIX:-rabbitmq}_rabbitmq_data
 
 networks:
   rabbitmq_network:

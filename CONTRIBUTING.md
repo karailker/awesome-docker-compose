@@ -25,6 +25,22 @@ Make your changes to the codebase. Ensure your changes are well-documented and f
 ### 5. Test Your Changes
 If applicable, test your changes to ensure they work as expected. If you're adding a new Docker Compose configuration, verify that it runs without errors.
 
+## Checklist for a new or changed project
+
+CI enforces most of this on every pull request (`.github/workflows/ci.yml`):
+
+- [ ] Directory `base/<name>/` or `stacks/<name>/` with `compose.yaml`, `.env.example` (if it has variables), `.gitignore` and `README.md`
+- [ ] README has: services table, quick start, access URLs and default credentials, configuration table, notes
+- [ ] Project is linked in the root `README.md` (CI fails otherwise)
+- [ ] Image tags are pinned (avoid `latest` unless there is no alternative)
+- [ ] Every long-running service has a healthcheck, and the tool it uses exists in the image (many images ship `curl` but not `wget`, or the other way round)
+- [ ] `docker compose config -q` passes with and without `.env.example`
+- [ ] Defaults are for local development only and say so; no real secrets
+- [ ] You ran `scripts/smoke.sh <dir>` locally. If the project is lightweight, add it to the `smoke` matrix in `ci.yml`; if it needs lots of RAM or time, add it to `heavy-smoke.yml`
+- [ ] For S3-compatible stores, `scripts/s3-smoke.py` passes against the endpoint
+- [ ] Data uses named volumes with `name: ${VOLUME_PREFIX:-<project>}_<volume>` and the project has a `compose.bind.yaml` override for host directories (copy one from an existing project; CI checks that every volume is overridden)
+- [ ] Host directories used by `compose.bind.yaml` are listed in `.gitignore`
+
 ### 6. Commit Your Changes
 Commit your changes with a clear and concise commit message:
 ```sh

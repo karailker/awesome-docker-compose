@@ -31,23 +31,11 @@ services:
 
 volumes:
   clickhouse_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./clickhouse_data
-      o: bind
+    name: ${VOLUME_PREFIX:-clickhouse}_clickhouse_data
   clickhouse_logs:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./clickhouse_logs
-      o: bind
+    name: ${VOLUME_PREFIX:-clickhouse}_clickhouse_logs
   clickhouse_config:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./clickhouse_config
-      o: bind
+    name: ${VOLUME_PREFIX:-clickhouse}_clickhouse_config
 
 networks:
   clickhouse-net:

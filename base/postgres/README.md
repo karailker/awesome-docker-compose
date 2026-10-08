@@ -35,7 +35,22 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 ## Notes
 
 - Port 5432 is **not** published to the host. Other containers reach it as `postgres:5432`; to connect from the host add `ports: ["5432:5432"]` to the service.
-- Data is stored in the `postgres_data` volume (bind-mounted to `./postgres_data`).
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `postgres_data` | `postgres_postgres_data` | `postgres:/var/lib/postgresql/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `postgres`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p postgres_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Stop and clean up
 

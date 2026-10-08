@@ -24,6 +24,23 @@ docker compose --profile redis-insight up -d
 - No password is configured: do not expose port 6379 beyond localhost.
 - The images use the `latest` tag; pin versions for reproducible setups. `redislabs/redisinsight` is the legacy repository name (`redis/redisinsight` is the current one).
 
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `redis_data` | `redis_redis_data` | `redis:/data` |
+| `redis_insight_data` | `redis_redis_insight_data` | `redis-insight:/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `redis`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p redis_data redis_insight_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
+
 ## Stop and clean up
 
 ```sh

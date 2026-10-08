@@ -49,6 +49,7 @@ services:
 
 volumes:
   kafka_data:
+    name: ${VOLUME_PREFIX:-kafka}_kafka_data
 
 networks:
   kafka_network:

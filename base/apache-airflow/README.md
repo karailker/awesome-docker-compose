@@ -48,6 +48,23 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 - Custom settings go in `config/airflow.cfg`.
 - Set `AIRFLOW__CORE__FERNET_KEY` before storing real connections or variables.
 
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `postgres_data` | `apache-airflow_postgres_data` | `postgres:/var/lib/postgresql/data` |
+| `redis_data` | `apache-airflow_redis_data` | `redis:/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `apache-airflow`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p postgres_data redis_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
+
 ## Stop and clean up
 
 ```sh

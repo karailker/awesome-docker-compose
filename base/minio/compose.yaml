@@ -1,7 +1,19 @@
 services:
+  minio-init-perms:
+    # The Chainguard MinIO image runs as uid 65532; make the data volume writable for it.
+    image: busybox:1.37
+    user: "0:0"
+    command: ["chown", "-R", "65532:65532", "/data"]
+    volumes:
+      - minio_data:/data
+    restart: "no"
+
   minio:
     image: cgr.dev/chainguard/minio:latest
     container_name: minio
+    depends_on:
+      minio-init-perms:
+        condition: service_completed_successfully
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -16,11 +28,7 @@ services:
 
 volumes:
   minio_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./minio_data
-      o: bind
+    name: ${VOLUME_PREFIX:-minio}_minio_data
 
 networks:
   minio_network:

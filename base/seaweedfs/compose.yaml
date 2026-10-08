@@ -24,6 +24,7 @@ services:
 
 volumes:
   seaweedfs_data:
+    name: ${VOLUME_PREFIX:-seaweedfs}_seaweedfs_data
 
 networks:
   seaweedfs_network:

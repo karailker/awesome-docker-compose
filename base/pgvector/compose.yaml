@@ -39,11 +39,7 @@ services:
 
 volumes:
   postgres_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./postgres_data
-      o: bind
+    name: ${VOLUME_PREFIX:-pgvector}_postgres_data
 
 networks:
   postgres-network:

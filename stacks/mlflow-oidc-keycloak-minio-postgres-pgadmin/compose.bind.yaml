@@ -1,0 +1,25 @@
+# Store the data in host directories instead of Docker-managed volumes.
+#
+#   mkdir -p ${DATA_DIR:-.}/minio_data ${DATA_DIR:-.}/postgres_data ${DATA_DIR:-.}/keycloak_data
+#   docker compose -f compose.yaml -f compose.bind.yaml up -d
+#
+# DATA_DIR (default: this directory) can be set in .env or the environment.
+volumes:
+  minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/minio_data
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/postgres_data
+  keycloak_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/keycloak_data

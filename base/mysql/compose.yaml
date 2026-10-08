@@ -54,11 +54,7 @@ services:
 
 volumes:
   mysql_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./mysql_data
-      o: bind
+    name: ${VOLUME_PREFIX:-mysql}_mysql_data
 
 networks:
   mysql-network:

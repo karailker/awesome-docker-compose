@@ -34,6 +34,25 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 - SonarQube's embedded Elasticsearch also needs at least 65535 open file descriptors on the Docker host.
 - Needs about 4 GB of RAM.
 
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `postgres_data` | `sonarqube_postgres_data` | `postgres:/var/lib/postgresql/data` |
+| `sonarqube_data` | `sonarqube_sonarqube_data` | `sonarqube:/opt/sonarqube/data` |
+| `sonarqube_extensions` | `sonarqube_sonarqube_extensions` | `sonarqube:/opt/sonarqube/extensions` |
+| `sonarqube_logs` | `sonarqube_sonarqube_logs` | `sonarqube:/opt/sonarqube/logs` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `sonarqube`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p sonarqube_data sonarqube_extensions sonarqube_logs postgres_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
+
 ## Stop and clean up
 
 ```sh
