@@ -18,7 +18,7 @@ services:
       - fastapi_logs:/var/log/fastapi
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health | grep -q 'ok'"]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/health | grep -q ok"]
       interval: 15s
       timeout: 5s
       retries: 30
