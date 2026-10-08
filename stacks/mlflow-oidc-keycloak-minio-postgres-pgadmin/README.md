@@ -1,5 +1,45 @@
-docker compose --profile init up -d
-docker compose --profile init down
+# MLflow (OIDC) + Keycloak + MinIO + PostgreSQL + pgAdmin
 
-docker compose init up -d
-docker compose init down
+MLflow with single sign-on through Keycloak using the [`mlflow-oidc-auth`](https://github.com/mlflow-oidc/mlflow-oidc-auth) plugin. Artifacts are stored in MinIO, metadata in PostgreSQL.
+
+## Services
+
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| `mlflow` | `ghcr.io/mlflow/mlflow` | 5000 | Tracking server with OIDC auth |
+| `keycloak` | `quay.io/keycloak/keycloak` | 8081 | Identity provider (realm `mlflow` auto-imported) |
+| `minio` | `cgr.dev/chainguard/minio` | 9000, 9001 | Artifact store |
+| `createbuckets` | `cgr.dev/chainguard/minio-client:latest-dev` | - | Creates the `mlflow` bucket (profile `init`) |
+| `postgres` | `postgres` | internal | Backend store |
+| `pgadmin` | `elestio/pgadmin` | 5433 | Database admin UI |
+
+## Quick start
+
+```sh
+cp .env.example .env
+mkdir -p minio_data postgres_data keycloak_data
+docker compose up -d
+docker compose --profile init up createbuckets   # once
+```
+
+1. Open <http://localhost:5000> and choose **Login with Keycloak**.
+2. Sign in with the demo user from `keycloak/realm-mlflow.json`: `admin@example.com` / `admin` (member of `mlflow-users`).
+3. Keycloak admin console: <http://localhost:8081> (`admin` / `admin`).
+
+## Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OIDC_CLIENT_SECRET` | `mlflowsecret` | Must match the `mlflow-client` secret in the realm file |
+| `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | `minioadmin` | MinIO credentials |
+| `POSTGRES_*` | `myuser` / `mypassword` / `mydatabase` | PostgreSQL credentials |
+| `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` | see `.env.example` | pgAdmin login |
+
+The realm (`keycloak/realm-mlflow.json`) defines the `mlflow` realm, the `mlflow-client` client with redirect URI `http://localhost:5000/callback`, the `mlflow-users` group and a demo user.
+
+## Notes
+
+- First start installs `mlflow-oidc-auth` with pip, so MLflow takes a minute to become available.
+- `OAUTHLIB_INSECURE_TRANSPORT=1` and debug logging are for local development only.
+- The MinIO image is distroless and non-root (uid `65532`); make `./minio_data` writable by it if needed.
+- Replace all default passwords and secrets, and put the stack behind TLS, before any real use.

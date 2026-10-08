@@ -27,7 +27,7 @@ services:
       - mflow-stack-network
 
   minio:
-    image: minio/minio:latest
+    image: cgr.dev/chainguard/minio:latest
     container_name: minio
     ports:
       - "9000:9000"
@@ -42,13 +42,12 @@ services:
       - mflow-stack-network
 
   createbuckets:
-    image: minio/mc:latest
+    image: cgr.dev/chainguard/minio-client:latest-dev
     depends_on:
       - minio
     entrypoint: >
       /bin/sh -c "
-        sleep 5 &&
-        mc alias set local http://minio:9000 minioadmin minioadmin &&
+        until mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin}; do sleep 2; done &&
         mc mb -p local/mlflow || true &&
         mc policy set public local/mlflow &&
         echo 'MinIO bucket ready.' "

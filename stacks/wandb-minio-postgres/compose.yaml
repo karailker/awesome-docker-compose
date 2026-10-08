@@ -13,7 +13,7 @@ services:
       mysql:
         condition: service_healthy
       minio:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
     environment:
       # --- MySQL metadata store ---
@@ -49,7 +49,7 @@ services:
       start_period: 20s
 
   minio:
-    image: minio/minio:latest
+    image: cgr.dev/chainguard/minio:latest
     container_name: minio
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
@@ -63,21 +63,15 @@ services:
       - minio_data:/data
     networks:
       - wandb-net
-    healthcheck:
-      test: ["CMD-SHELL", "mc alias set local http://localhost:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin} >/dev/null 2>&1 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 10s
 
   createbuckets:
-    image: minio/mc:latest
+    image: cgr.dev/chainguard/minio-client:latest-dev
     depends_on:
       minio:
-        condition: service_healthy
+        condition: service_started
     entrypoint: >
       /bin/sh -c "
-        mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin} &&
+        until mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin}; do sleep 2; done &&
         mc mb -p local/${MINIO_BUCKET_NAME:-wandb-bucket} || true &&
         mc anonymous set download local/${MINIO_BUCKET_NAME:-wandb-bucket} ||
         echo 'Bucket ${MINIO_BUCKET_NAME:-wandb-bucket} is ready.'
