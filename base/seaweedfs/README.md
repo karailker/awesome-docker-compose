@@ -6,7 +6,7 @@ Distributed storage system with an S3-compatible gateway (Apache-2.0). This setu
 
 | Service | Image | Ports | Purpose |
 |---------|-------|-------|---------|
-| `seaweedfs` | `chrislusf/seaweedfs:latest` | 9333 (Master UI), 8888 (Filer UI), 8333 (S3 API) | All-in-one SeaweedFS |
+| `seaweedfs` | `chrislusf/seaweedfs:4.48` | 9333 (Master UI), 8888 (Filer UI), 8333 (S3 API) | All-in-one SeaweedFS |
 
 ## Quick start
 
@@ -30,7 +30,7 @@ S3 identities are defined in [`config/s3.json`](config/s3.json) (default key `se
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SEAWEEDFS_IMAGE` | `chrislusf/seaweedfs:latest` | Pin a release tag for reproducible deployments |
+| `SEAWEEDFS_IMAGE` | `chrislusf/seaweedfs:4.48` | Override the image/tag |
 
 ## Notes
 

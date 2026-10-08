@@ -189,10 +189,14 @@ jobs:
               SK=$(echo "$out" | awk '/^Secret key/{print $NF; exit}') ;;
           esac
           python3 "$GITHUB_WORKSPACE/scripts/s3-smoke.py" "${{ matrix.endpoint }}" "$AK" "$SK" "${{ matrix.region }}"
-      - name: Logs on failure
+      - name: Diagnostics on failure
         if: failure()
         working-directory: ${{ matrix.project }}
-        run: docker compose logs --tail=200
+        run: |
+          for c in $(docker compose ps -a -q); do
+            docker inspect -f '{{.Name}} health: {{json .State.Health}}' "$c" | cut -c1-1500
+          done
+          docker compose logs --tail=100
       - name: Tear down
         if: always()
         working-directory: ${{ matrix.project }}

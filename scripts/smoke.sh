@@ -12,6 +12,12 @@ docker compose ps -a
 # non-zero exited containers or unhealthy ones are failures (one-shot init jobs exiting 0 are fine)
 bad=$(docker compose ps -a --format '{{.Name}} {{.State}} {{.ExitCode}} {{.Health}}' | awk '($2=="exited" && $3!=0) || $4=="unhealthy" || $2=="restarting"')
 if [ -n "$bad" ]; then echo "::error::unhealthy/failed containers in $dir:"; echo "$bad"; rc=1; fi
-[ $rc -ne 0 ] && docker compose logs --tail=100
+if [ $rc -ne 0 ]; then
+  for c in $(docker compose ps -a -q); do
+    echo "--- health of $(docker inspect -f '{{.Name}}' "$c"):"
+    docker inspect -f '{{json .State.Health}}' "$c" | cut -c1-1500
+  done
+  docker compose logs --tail=100
+fi
 docker compose down -v --remove-orphans >/dev/null 2>&1
 exit $rc

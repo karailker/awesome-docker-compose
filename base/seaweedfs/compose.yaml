@@ -1,6 +1,6 @@
 services:
   seaweedfs:
-    image: ${SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:latest}
+    image: ${SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.48}
     container_name: seaweedfs
     command: >
       server -dir=/data -master.volumeSizeLimitMB=1024
@@ -16,7 +16,7 @@ services:
       - seaweedfs_network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9333/cluster/status >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9333/cluster/healthz >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
