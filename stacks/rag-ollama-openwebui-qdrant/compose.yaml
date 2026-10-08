@@ -1,0 +1,97 @@
+# Local RAG / LLM stack: Ollama runs the models, Open WebUI is the chat UI and RAG front end,
+# Qdrant stores the document embeddings (Open WebUI uses it as its vector database).
+services:
+  ollama:
+    image: ${OLLAMA_IMAGE:-ollama/ollama:0.40.1}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - rag_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 5s
+
+  # One-shot job: downloads the chat and embedding models into the ollama volume.
+  ollama-models:
+    image: ${OLLAMA_IMAGE:-ollama/ollama:0.40.1}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        for model in "$$CHAT_MODEL" "$$EMBED_MODEL"; do
+          echo "pulling $$model"
+          ollama pull "$$model"
+        done
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      CHAT_MODEL: ${CHAT_MODEL:-llama3.2:1b}
+      EMBED_MODEL: ${EMBED_MODEL:-nomic-embed-text}
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - rag_network
+    restart: "no"
+
+  qdrant:
+    image: ${QDRANT_IMAGE:-qdrant/qdrant:v1.19.2}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${QDRANT_PORT:-6333}:6333" # REST API and dashboard (/dashboard)
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - rag_network
+    restart: unless-stopped
+
+  open-webui:
+    image: ${OPEN_WEBUI_IMAGE:-ghcr.io/open-webui/open-webui:v0.7.2}
+    ports:
+      - "${WEBUI_BIND_ADDRESS:-127.0.0.1}:${WEBUI_PORT:-3000}:8080"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      ENABLE_OPENAI_API: "false"
+      DEFAULT_MODELS: ${CHAT_MODEL:-llama3.2:1b}
+      # RAG: embeddings come from Ollama, vectors go to Qdrant
+      VECTOR_DB: qdrant
+      QDRANT_URI: http://qdrant:6333
+      RAG_EMBEDDING_ENGINE: ollama
+      RAG_EMBEDDING_MODEL: ${EMBED_MODEL:-nomic-embed-text}
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:-dev-secret-change-me}
+      ENABLE_SIGNUP: ${ENABLE_SIGNUP:-true}
+      SCARF_NO_ANALYTICS: "true"
+      DO_NOT_TRACK: "true"
+      ANONYMIZED_TELEMETRY: "false"
+    volumes:
+      - openwebui_data:/app/backend/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    networks:
+      - rag_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 60s
+
+volumes:
+  ollama_data:
+    name: ${VOLUME_PREFIX:-rag-ollama-openwebui-qdrant}_ollama_data
+  qdrant_data:
+    name: ${VOLUME_PREFIX:-rag-ollama-openwebui-qdrant}_qdrant_data
+  openwebui_data:
+    name: ${VOLUME_PREFIX:-rag-ollama-openwebui-qdrant}_openwebui_data
+
+networks:
+  rag_network:
+    driver: bridge

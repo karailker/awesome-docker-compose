@@ -1,0 +1,13 @@
+# NVIDIA GPU for Ollama (needs the NVIDIA Container Toolkit on the host).
+# Not exercised by CI because hosted runners have no GPU.
+#
+#   docker compose -f compose.yaml -f compose.gpu.yaml up -d
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

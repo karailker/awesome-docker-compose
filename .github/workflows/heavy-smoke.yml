@@ -29,6 +29,7 @@ jobs:
           - stacks/mlflow-minio-postgres-pgadmin
           - stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin
           - stacks/wandb-minio-postgres
+          - stacks/rag-ollama-openwebui-qdrant
     steps:
       - uses: actions/checkout@v4
       - name: Raise vm.max_map_count (Elasticsearch / SonarQube)
