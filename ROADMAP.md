@@ -10,7 +10,8 @@ Legend: ✅ done and verified · 🟡 done, not verified end to end · 🚧 in p
 | Level | What runs | When |
 |-------|-----------|------|
 | **Static** | yamllint, JSON, ShellCheck, actionlint, `docker compose config` (with `.env.example` and defaults), README link coverage, every image resolves in its registry | every PR |
-| **Smoke** | `scripts/smoke.sh`: start the project, wait for health, fail on crashed/unhealthy containers | every PR (lightweight projects), weekly + on demand (heavy projects) |
+| **Smoke** | `scripts/smoke.sh`: start the project, wait for health, fail on crashed/unhealthy/restarting containers (one-shot jobs that exit 0 are fine) | every PR (lightweight projects), weekly + on demand (heavy projects) |
+| **Bind mode** | same smoke test with `compose.bind.yaml` (host directories) | every PR (Postgres, MongoDB, Qdrant) |
 | **S3 round trip** | create bucket, put, get, list, delete through the S3 API | every PR (RustFS, SeaweedFS, Garage) |
 
 Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scripts/s3-smoke.py <endpoint> <key> <secret>`.
@@ -22,12 +23,12 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `base/postgres`, `pgvector`, `mysql`, `mongodb`, `redis`, `valkey`, `rabbitmq`, `qdrant`, `kafka`, `grafana`, `influxdb`, `clickhouse`, `cockroachdb`, `fastapi` | ✅ | PR smoke | |
 | `base/rustfs`, `seaweedfs`, `garage` | ✅ | PR smoke + S3 round trip | maintained S3 stores |
 | `base/minio` | 🟡 legacy | PR smoke (starts) | MinIO Community Edition is unmaintained; Chainguard image is rebuilt from frozen source |
-| `base/prefect`, `nexus`, `sonarqube`, `apache-airflow`, `feast` | ✅ | heavy smoke | |
+| `base/prefect`, `nexus`, `sonarqube`, `apache-airflow`, `feast` | ✅ | heavy smoke | Prefect now really uses PostgreSQL (the old setting name was ignored) |
 | `stacks/mlflow-minio-postgres-pgadmin`, `mlflow-oidc-keycloak-minio-postgres-pgadmin` | ✅ | heavy smoke | start only; no tracking run or OIDC login is exercised |
 | `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke | UI answers; real use of W&B Local may need a license/account |
-| `base/elasticsearch` | 🟡 | heavy smoke | cluster, Kibana and APM server become healthy; the smoke check used to fail on the one-shot `setup` job (fixed) |
-| `base/milvus` | 🟡 | heavy smoke | see [Known issues](#known-issues) |
-| `base/gitlab` | 🟡 | none yet | never run in CI; needs about 4 GB RAM |
+| `base/elasticsearch` | ✅ | heavy smoke | 3-node cluster, Kibana and APM server become healthy; ingestion is not tested |
+| `base/milvus` | ✅ | heavy smoke | needed the MinIO permission fix; no collection is created yet |
+| `base/gitlab` | ✅ starts | heavy smoke | needs about 4 GB RAM; credentials are hard-coded and `external_url` does not match the published port |
 
 ## Roadmap items
 
@@ -39,7 +40,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 - README for every project
 
 ### In progress 🚧
-- GitLab: compose exists but has hard-coded credentials, no CI coverage and an `external_url` that does not match the published port (`8090`)
+- GitLab: starts and is covered by the heavy workflow; still has hard-coded credentials and an `external_url` that does not match the published port (`8090`)
 
 ### Not started ⬜
 - Apache Superset: feasible (official image, needs a metadata DB, Redis and an init step)
@@ -63,7 +64,7 @@ Ordered by user impact.
 4. **Chainguard images run as non-root (uid 65532).** Data directories must be owned by that uid; every MinIO project now has a one-shot `minio-init-perms` service that fixes ownership first (found by the heavy run: Milvus' MinIO crashed with `file access denied`).
 5. **Insecure defaults.** Default passwords and tokens are documented everywhere, but nothing stops them from being published. CockroachDB runs `--insecure`.
 6. **GitLab URL.** `external_url` is `http://gitlab.local` while the web UI is published on `8090`.
-7. **Healthchecks.** Several images do not ship the tool the healthcheck needs (found: `wget` missing in CockroachDB, Nexus and FastAPI images). New healthchecks must be verified in CI, which `scripts/smoke.sh` now does.
+7. **Healthchecks and start order.** Several images do not ship the tool the healthcheck needs (found: `wget` missing in CockroachDB, Nexus and FastAPI images). New healthchecks must be verified in CI, which `scripts/smoke.sh` now does. The same check found services that crash when started before their dependency is ready (Prefect worker), so dependencies should use `condition: service_healthy`.
 
 ## Proposals
 

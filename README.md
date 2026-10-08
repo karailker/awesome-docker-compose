@@ -53,7 +53,7 @@ Every pull request runs [GitHub Actions](.github/workflows/ci.yml): YAML/JSON/sh
 The full picture (verified status of every project, blocked items, known issues and proposals) is in **[ROADMAP.md](ROADMAP.md)**. Short version:
 
 - ✅ **Done:** SonarQube, Sonatype Nexus, FastAPI example, InfluxDB + Telegraf, ClickHouse + Tabix, CockroachDB, RustFS, SeaweedFS, Garage, Weights & Biases Local
-- 🚧 **In progress:** [GitLab](base/gitlab/) (compose exists, not yet covered by CI)
+- 🚧 **In progress:** [GitLab](base/gitlab/) (starts and is tested weekly; credentials and `external_url` still need work)
 - ⬜ **Pending:** Apache Superset, BentoML
 - 🔄 **Postponed:** dbt Core
 - ⛔ **Blocked / needs a design decision:** Nvidia Triton (GPU, huge image, not testable on hosted runners), Great Expectations (a library, not a service)
