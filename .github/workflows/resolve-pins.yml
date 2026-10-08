@@ -25,10 +25,15 @@ jobs:
           IMAGES: ${{ inputs.images || 'quay.io/keycloak/keycloak:latest ghcr.io/mlflow/mlflow:latest quay.io/feastdev/feature-server:latest cgr.dev/chainguard/minio:latest' }}
         run: |
           for img in $IMAGES; do
-            echo "::group::$img"
-            docker buildx imagetools inspect "$img" | sed -n '1,6p'
-            docker buildx imagetools inspect "$img" --format '{{json .Image}}' \
-              | jq -r '.config.Labels // {} | to_entries[] | select(.key|test("version|revision|created";"i")) | "\(.key)=\(.value)"' || true
+            repo=${img%:*}; tag=${img##*:}
+            digest=$(docker buildx imagetools inspect "$img" | awk '/^Digest:/{print $2; exit}')
+            echo "::group::$img ($digest)"
+            matches=""
+            # newest semver-looking tags first; compare manifest digests with the floating tag
+            for t in $(skopeo list-tags "docker://$repo" | jq -r '.Tags[]' | grep -E '^v?[0-9]+(\.[0-9]+){1,3}$' | sort -V -r | head -30); do
+              d="sha256:$(skopeo inspect --raw "docker://$repo:$t" | sha256sum | cut -d' ' -f1)"
+              if [ "$d" = "$digest" ]; then matches="$matches $t"; fi
+            done
             echo "::endgroup::"
-            echo "$img -> $(docker buildx imagetools inspect "$img" --format '{{json .Image}}' | jq -r '.config.Labels // {} | (."org.opencontainers.image.version" // .version // "unknown")')"
+            echo "RESOLVED $img -> ${matches:-no matching semver tag in the newest 30}"
           done
