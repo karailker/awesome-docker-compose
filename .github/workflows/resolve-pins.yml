@@ -25,7 +25,7 @@ jobs:
           IMAGES: ${{ inputs.images || 'quay.io/keycloak/keycloak:latest ghcr.io/mlflow/mlflow:latest quay.io/feastdev/feature-server:latest cgr.dev/chainguard/minio:latest' }}
         run: |
           for img in $IMAGES; do
-            repo=${img%:*}; tag=${img##*:}
+            repo=${img%:*}
             digest=$(docker buildx imagetools inspect "$img" | awk '/^Digest:/{print $2; exit}')
             echo "::group::$img ($digest)"
             matches=""
