@@ -7,7 +7,7 @@ x-s3-creds: &s3-creds
 
 services:
   wandb:
-    image: wandb/local:latest
+    image: wandb/local:0.85.1
     container_name: wandb_local
     depends_on:
       mysql:

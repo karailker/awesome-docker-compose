@@ -6,7 +6,7 @@ MySQL with two optional admin UIs: Adminer and phpMyAdmin.
 
 | Service | Image | Port(s) | Purpose |
 |---|---|---|---|
-| `mysql` | `mysql:latest` | 3306, 3307 | Database |
+| `mysql` | `mysql:8.4` | 3306, 3307 | Database |
 | `adminer` | `adminer` | 8080 | Lightweight DB UI (profile `adminer`) |
 | `phpmyadmin` | `phpmyadmin/phpmyadmin` | 8081 | DB UI (profile `phpmyadmin`) |
 
@@ -38,7 +38,7 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 ## Notes
 
-- The image tag is `latest`; pin a version (for example `mysql:8.4`) for reproducible setups.
+- MySQL 8.4 is the current LTS release; the admin UIs are pinned as well.
 
 ## Data and volumes
 

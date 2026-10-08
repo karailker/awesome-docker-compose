@@ -1,0 +1,36 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard"],
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 5,
+  "enabledManagers": ["docker-compose", "custom.regex", "github-actions"],
+  "customManagers": [
+    {
+      "description": "Images given as defaults of an environment variable: ${NAME:-image:tag}",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)compose(\\.bind)?\\.ya?ml$/"],
+      "matchStrings": ["\\$\\{[A-Z0-9_]+:-(?<depName>[^\\s:$}]+):(?<currentValue>[^\\s}]+)\\}"],
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Group all non-major image updates of a week into one PR",
+      "matchManagers": ["docker-compose", "custom.regex"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "compose images (minor and patch)"
+    },
+    {
+      "description": "Major upgrades of stateful services can break existing data: ask first (Dependency Dashboard)",
+      "matchManagers": ["docker-compose", "custom.regex"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep GitHub Actions updates separate",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    }
+  ]
+}

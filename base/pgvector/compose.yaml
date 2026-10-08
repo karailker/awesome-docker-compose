@@ -23,7 +23,7 @@ services:
     ports:
       - "5432:5432"
   pgadmin:
-    image: elestio/pgadmin:latest
+    image: elestio/pgadmin:REL-9_18
     container_name: pgadmin
     profiles: ["pgadmin"]
     environment:

@@ -59,7 +59,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 Ordered by user impact.
 
 1. ~~**Bind volumes need pre-created directories.**~~ Fixed: data now lives in named volumes (`<VOLUME_PREFIX>_<volume>`), and every project has a `compose.bind.yaml` override for host directories. CI validates the override for every project and runs a bind-mode smoke test for Postgres, MongoDB and Qdrant.
-2. **Many images use `latest`.** Examples: `postgres:latest` caused a breakage when Postgres 18 shipped, `confluentinc/cp-kafka:latest` dropped Zookeeper. Pin versions and let a bot propose updates.
+2. ~~**Many images use `latest`.**~~ Fixed: every image is pinned to the version `latest` resolved to (MySQL to the 8.4 LTS), `scripts/check-pins.sh` enforces it in CI, and `renovate.json` proposes updates (the Renovate GitHub app must be enabled for the repository). Remaining floating tags are listed with a reason in `scripts/pin-exceptions.txt`: Chainguard's free tier only publishes `:latest`, and the Tabix image only has `:latest`.
 3. **MinIO is unmaintained.** `base/minio`, `base/milvus` and the three MLflow/W&B stacks still use the Chainguard MinIO build. Migrate to RustFS, SeaweedFS or Garage once those are exercised by the stacks.
 4. **Chainguard images run as non-root (uid 65532).** Data directories must be owned by that uid; every MinIO project now has a one-shot `minio-init-perms` service that fixes ownership first (found by the heavy run: Milvus' MinIO crashed with `file access denied`).
 5. **Insecure defaults.** Default passwords and tokens are documented everywhere, but nothing stops them from being published. CockroachDB runs `--insecure`.
@@ -72,7 +72,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 
 ### Repository health (highest value)
 1. ~~Decide the volume strategy~~ Done: named volumes plus `compose.bind.yaml` (see known issue 1).
-2. **Pin image versions and add Renovate or Dependabot** (`docker-compose` ecosystem) so tags are updated by PRs that CI validates.
+2. ~~Pin image versions and add Renovate~~ Done (see known issue 2); needs the Renovate app enabled on the repository.
 3. **Project template** (`templates/base/`): `compose.yaml`, `.env.example`, `.gitignore`, `README.md` skeleton, so new projects start consistent. Extend CI with a check that every project has the same README sections.
 4. **Contributor checklist and PR template** that mirror what CI enforces (healthcheck present, versions pinned, README sections, listed in the root README).
 5. **Security scanning**: Trivy (config and image scan) and gitleaks in CI; fail only on high severity and secrets.

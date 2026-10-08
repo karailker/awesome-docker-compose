@@ -6,7 +6,7 @@
 
 | Service | Image | Port(s) | Purpose |
 |---|---|---|---|
-| `valkey` | `valkey/valkey:latest` | 6379 | Data store |
+| `valkey` | `valkey/valkey:9.1.2` | 6379 | Data store |
 
 ## Quick start
 

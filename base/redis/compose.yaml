@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:latest
+    image: redis:8.10.2
     container_name: redis
     ports:
       - "6379:6379"
@@ -10,7 +10,7 @@ services:
       - redis_network
 
   redis-insight:
-    image: redislabs/redisinsight:latest
+    image: redislabs/redisinsight:3.8.0
     container_name: redis-insight
     ports:
       - "5540:5540"

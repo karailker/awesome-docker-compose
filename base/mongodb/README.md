@@ -6,7 +6,7 @@ MongoDB (authentication enabled) with an optional Mongo Express web UI. Based on
 
 | Service | Image | Port(s) | Purpose |
 |---|---|---|---|
-| `mongo` | `mongo:latest` | 27017 | Database (`--auth`) |
+| `mongo` | `mongo:9.0.2` | 27017 | Database (`--auth`) |
 | `mongo-express` | `mongo-express` | 8081 | Web UI (profile `mongo-express`) |
 
 ## Quick start

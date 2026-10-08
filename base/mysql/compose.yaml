@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:latest
+    image: mysql:8.4
     restart: always
     container_name: mysql
     environment:
@@ -22,7 +22,7 @@ services:
       retries: 10
 
   adminer:
-    image: adminer:latest
+    image: adminer:6.1.1
     restart: always
     container_name: adminer
     profiles: ["adminer"]
@@ -37,7 +37,7 @@ services:
       - mysql-network
   
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
+    image: phpmyadmin/phpmyadmin:5.2.3
     restart: always
     container_name: phpmyadmin
     profiles: ["phpmyadmin"]  # Optional profile

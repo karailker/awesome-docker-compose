@@ -6,7 +6,7 @@ x-mlflow-creds: &mlflow-creds
 
 services:
   mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
+    image: ghcr.io/mlflow/mlflow:v3.17.0
     container_name: mlflow_server
     depends_on:
       - postgres
@@ -43,7 +43,7 @@ services:
       - mflow-stack-network
 
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: quay.io/keycloak/keycloak:26.8.0
     container_name: keycloak
     command: ["start-dev", "--import-realm"]
     environment:
@@ -125,7 +125,7 @@ services:
       retries: 10
 
   pgadmin:
-    image: elestio/pgadmin:latest
+    image: elestio/pgadmin:REL-9_18
     container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}

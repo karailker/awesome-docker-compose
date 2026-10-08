@@ -1,6 +1,6 @@
 services:
   prefect-server:
-    image: ${PREFECT_IMAGE:-prefecthq/prefect:3-latest}
+    image: ${PREFECT_IMAGE:-prefecthq/prefect:3.8.8-python3.12}
     command: prefect server start --host 0.0.0.0
     ports:
       - "4200:4200"  # Prefect UI
@@ -21,7 +21,7 @@ services:
       start_period: 30s
 
   prefect-worker-1:
-    image: ${PREFECT_IMAGE:-prefecthq/prefect:3-latest}
+    image: ${PREFECT_IMAGE:-prefecthq/prefect:3.8.8-python3.12}
     depends_on:
       prefect-server:
         condition: service_healthy
