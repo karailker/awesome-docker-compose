@@ -9,8 +9,6 @@ services:
       - "${COCKROACH_HTTP_PORT:-8088}:8080"   # Admin UI / Prom metrics
     environment:
       COCKROACH_DATABASE: ${COCKROACH_DATABASE:-appdb}
-      COCKROACH_USER: ${COCKROACH_USER:-app}
-      COCKROACH_PASSWORD: ${COCKROACH_PASSWORD:-apppass}
     volumes:
       - cockroach_data:/cockroach/cockroach-data
     restart: unless-stopped
@@ -29,13 +27,15 @@ services:
     depends_on:
       cockroach:
         condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      cockroach sql --insecure --host=cockroach:26257 -e
-      \"CREATE DATABASE IF NOT EXISTS ${COCKROACH_DATABASE:-appdb};
-        CREATE USER IF NOT EXISTS ${COCKROACH_USER:-app} WITH PASSWORD '${COCKROACH_PASSWORD:-apppass}';
-        GRANT ALL ON DATABASE ${COCKROACH_DATABASE:-appdb} TO ${COCKROACH_USER:-app};\"
-      && echo 'CockroachDB init completed.' "
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+        cockroach sql --insecure --host=cockroach:26257 -e
+        "CREATE DATABASE IF NOT EXISTS ${COCKROACH_DATABASE:-appdb};
+        CREATE USER IF NOT EXISTS ${COCKROACH_USER:-app};
+        GRANT ALL ON DATABASE ${COCKROACH_DATABASE:-appdb} TO ${COCKROACH_USER:-app};"
+        && echo 'CockroachDB init completed.'
     profiles: ["init"]
     networks:
       - cockroach-net
