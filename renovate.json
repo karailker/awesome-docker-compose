@@ -20,13 +20,24 @@
   ],
   "customManagers": [
     {
-      "description": "Images given as defaults of an environment variable: ${NAME:-image:tag}",
+      "description": "Images given as the default of an image variable: ${SOMETHING_IMAGE:-image:tag}",
       "customType": "regex",
       "managerFilePatterns": [
         "/(^|/)compose(\\.bind)?\\.ya?ml$/"
       ],
       "matchStrings": [
-        "\\$\\{[A-Z0-9_]+:-(?<depName>[^\\s:$}]+):(?<currentValue>[^\\s}]+)\\}"
+        "\\$\\{[A-Z0-9_]*IMAGE[A-Z0-9_]*:-(?<depName>[^\\s:$}]+):(?<currentValue>[^\\s}]+)\\}"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Images whose tag is a version variable: image: name:${STACK_VERSION:-1.2.3}",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)compose(\\.bind)?\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "image:\\s*(?<depName>[^\\s:$]+):\\$\\{[A-Z0-9_]+:-(?<currentValue>[^\\s}]+)\\}"
       ],
       "datasourceTemplate": "docker"
     }
@@ -98,6 +109,21 @@
         "pip_requirements"
       ],
       "groupName": "fastapi example dependencies"
+    },
+    {
+      "description": "fastapi-example is built locally from base/fastapi/Dockerfile",
+      "matchPackageNames": [
+        "fastapi-example"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Elasticsearch, Kibana and APM server must move together; every upgrade needs approval",
+      "matchPackageNames": [
+        "docker.elastic.co/**"
+      ],
+      "groupName": "elastic stack",
+      "dependencyDashboardApproval": true
     }
   ]
 }
