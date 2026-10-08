@@ -13,6 +13,8 @@ Legend: ✅ done and verified · 🟡 done, not verified end to end · 🚧 in p
 | **Smoke** | `scripts/smoke.sh`: start the project, wait for health, fail on crashed/unhealthy/restarting containers (one-shot jobs that exit 0 are fine) | every PR (lightweight projects), weekly + on demand (heavy projects) |
 | **Bind mode** | same smoke test with `compose.bind.yaml` (host directories) | every PR (Postgres, MongoDB, Qdrant) |
 | **S3 round trip** | create bucket, put, get, list, delete through the S3 API | every PR (RustFS, SeaweedFS, Garage) |
+| **Functional** | a project's own `smoke-test.sh` runs after startup (real requests through the stack) | every PR (LGTM stack), weekly + on demand (RAG stack) |
+| **Security** | gitleaks (full history), Trivy (secrets, Dockerfiles), compose policy; weekly image vulnerability report | every PR / weekly |
 
 Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scripts/s3-smoke.py <endpoint> <key> <secret>`.
 
@@ -25,7 +27,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `base/minio` | 🟡 legacy | PR smoke (starts) | MinIO Community Edition is unmaintained; Chainguard image is rebuilt from frozen source |
 | `base/prefect`, `nexus`, `sonarqube`, `apache-airflow`, `feast` | ✅ | heavy smoke | Prefect now really uses PostgreSQL (the old setting name was ignored) |
 | `stacks/mlflow-minio-postgres-pgadmin`, `mlflow-oidc-keycloak-minio-postgres-pgadmin` | ✅ | heavy smoke | start only; no tracking run or OIDC login is exercised |
-| `stacks/rag-ollama-openwebui-qdrant` | 🟡 | see note | functional test covers models, embeddings, generation, Qdrant search and an Open WebUI upload; first CI run pending, GPU override untested |
+| `stacks/rag-ollama-openwebui-qdrant` | ✅ | heavy smoke + functional test | models download, embeddings, generation, Qdrant similarity search and an Open WebUI upload that lands in Qdrant; the GPU override is untested (no GPU runners) |
 | `stacks/lgtm-observability` | ✅ | PR smoke + functional test | trace, metric and log round trip through the collector; Grafana provisioning checked; demo profile exercised in CI |
 | `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke | UI answers; real use of W&B Local may need a license/account |
 | `base/elasticsearch` | ✅ | heavy smoke | 3-node cluster, Kibana and APM server become healthy; ingestion is not tested |
@@ -39,6 +41,8 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 - RustFS, SeaweedFS, Garage (replacing unmaintained MinIO)
 - Weights & Biases Local stack (starts and serves the UI)
 - LGTM observability stack (Loki, Grafana, Tempo, Prometheus, OpenTelemetry Collector) with a functional round-trip test
+- Local RAG stack (Ollama, Open WebUI, Qdrant) with a functional test from model download to a document landing in Qdrant
+- Named volumes with `compose.bind.yaml`, pinned image versions with Renovate, security scans, Makefile, contributor checklist and PR template
 - CI: static checks, smoke tests, S3 compatibility tests, weekly heavy tests
 - README for every project
 
@@ -82,7 +86,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 1. ~~Decide the volume strategy~~ Done: named volumes plus `compose.bind.yaml` (see known issue 1).
 2. ~~Pin image versions and add Renovate~~ Done (see known issue 2); needs the Renovate app enabled on the repository.
 3. **Project template** (`templates/base/`): `compose.yaml`, `.env.example`, `.gitignore`, `README.md` skeleton, so new projects start consistent. Extend CI with a check that every project has the same README sections.
-4. **Contributor checklist and PR template** that mirror what CI enforces (healthcheck present, versions pinned, README sections, listed in the root README).
+4. ~~Contributor checklist and PR template~~ Done (`CONTRIBUTING.md`, `.github/pull_request_template.md`). Not enforced yet: README section layout (see item 3).
 5. ~~Security scanning~~ Done: gitleaks (full history, baseline for old findings), Trivy for secrets and Dockerfile misconfiguration, a compose policy check, and a weekly image/dependency vulnerability report. The scans already found two real problems (see known issues 8 and 9).
 6. ~~Helper entrypoint~~ Done: `Makefile` (`make help`).
 7. **Generated project index** in the root README (from a small metadata file per project) so the list cannot drift from the directory tree.
@@ -91,13 +95,13 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 ### New base services
 | Area | Candidates | Notes |
 |------|-----------|-------|
-| Observability | Loki + Promtail, Tempo, Jaeger, OpenTelemetry Collector, Alertmanager | extend Grafana/Prometheus into an LGTM stack |
+| Observability | Jaeger, Alertmanager, Grafana Alloy (container logs) | Loki, Tempo and the OpenTelemetry Collector already ship in `stacks/lgtm-observability` |
 | Messaging / streaming | Redpanda, NATS, Apache Pulsar, Redpanda Console | Redpanda is a lighter Kafka-compatible option |
 | Databases | MariaDB, Neo4j, TimescaleDB, ScyllaDB, SurrealDB, DuckDB (+ UI) | |
 | Search / vector | Meilisearch, Typesense, OpenSearch + Dashboards, Weaviate, Chroma | OpenSearch is the natural Elasticsearch alternative |
 | BI / data | Metabase, Apache Superset, Trino, Apache Spark (standalone), Dagster | Metabase is the easiest BI addition |
 | Platform / DevOps | Traefik or Caddy (reverse proxy + TLS), Vault, Gitea or Forgejo, Woodpecker CI, Harbor, Authentik | reverse proxy is the most reusable building block |
-| AI | Ollama + Open WebUI, Langfuse, LiteLLM proxy, ChromaDB | CPU-only examples are testable in CI with tiny models |
+| AI | Langfuse, LiteLLM proxy, ChromaDB | Ollama + Open WebUI + Qdrant already ship in `stacks/rag-ollama-openwebui-qdrant`; CPU-only examples are testable in CI with small models |
 
 ### New stacks
 - ~~Observability (LGTM)~~ Done (`stacks/lgtm-observability`). Follow-ups: Tempo span-metrics and service graph (metrics generator), Alertmanager with sample alert rules, container log collection (Grafana Alloy), a sample instrumented app.
@@ -108,9 +112,20 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 - **S3-backed stacks on the maintained stores**: MLflow and W&B variants using RustFS/SeaweedFS/Garage instead of MinIO.
 
 ### Testing improvements
-- Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for the LGTM stack). Next candidates: log an MLflow run and read it back, produce/consume on Kafka (Kafka was done by hand), run a query on each database, ingest a trace into the APM server.
+- Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for the LGTM and RAG stacks). Next candidates: log an MLflow run and read it back, produce/consume on Kafka (Kafka was done by hand), run a query on each database, ingest a trace into the APM server.
 - A scheduled job that opens an issue when the weekly heavy run fails.
 - Resource budget per project in metadata (RAM/CPU) so the heavy workflow can pick the right runner and timeout.
+
+## Suggested next steps
+
+In rough order of value for effort:
+
+1. **Move the MinIO users to a maintained store** (MLflow x2, W&B, Milvus, `base/minio`): RustFS or SeaweedFS are already exercised by an S3 round trip in CI. Removes the last dependency on the frozen MinIO source and the `minio-init-perms` workaround.
+2. **GitLab**: generate the root password from `.env`, fix `external_url` / the published port, add a functional check (sign in through the API).
+3. **Functional tests for the heavy stacks**: MLflow (log a run and read it back), Kafka (produce/consume), Airflow (trigger an example DAG), Elasticsearch (index and search). Each one is a `smoke-test.sh`.
+4. **Project template and README section check** (proposal 3), so new projects start consistent.
+5. **Apache Superset or Metabase** as a BI service, then the data platform stack (database + dbt + scheduler + BI).
+6. **Alertmanager and span-metrics for the LGTM stack**, and Langfuse / a pgvector variant for the RAG stack.
 
 ## How to propose or pick up an item
 
