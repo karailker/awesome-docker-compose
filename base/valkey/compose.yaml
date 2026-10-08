@@ -11,11 +11,7 @@ services:
 
 volumes:
   valkey_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./valkey_data
-      o: bind
+    name: ${VOLUME_PREFIX:-valkey}_valkey_data
 
 networks:
   valkey_network:

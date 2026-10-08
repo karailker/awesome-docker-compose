@@ -24,17 +24,9 @@ services:
 
 volumes:
   redis_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./redis_data
-      o: bind
+    name: ${VOLUME_PREFIX:-redis}_redis_data
   redis_insight_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./redis_insight_data
-      o: bind
+    name: ${VOLUME_PREFIX:-redis}_redis_insight_data
 
 networks:
   redis_network:

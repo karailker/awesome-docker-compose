@@ -40,8 +40,25 @@ wandb login --host http://localhost:8088
 | `AWS_REGION` | `us-east-1` | S3 region |
 | `MYSQL_DATABASE` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_ROOT_PASSWORD` | `wandb` / `wandbuser` / `wandbpass` / `rootpass` | MySQL settings |
 
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `minio_data` | `wandb-minio-postgres_minio_data` | `minio:/data`, `minio-init-perms:/data` |
+| `mysql_data` | `wandb-minio-postgres_mysql_data` | `mysql:/var/lib/mysql` |
+| `wandb_data` | `wandb-minio-postgres_wandb_data` | `wandb:/vol` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `wandb-minio-postgres`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p wandb_data minio_data mysql_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
+
 ## Notes
 
-- Data is kept in named Docker volumes (`wandb_data`, `minio_data`, `mysql_data`); `docker compose down -v` deletes it.
 - The MinIO image is distroless and has no shell, so it has no healthcheck; `wandb` only waits for it to start.
 - Development defaults only; change all passwords before exposing the stack.

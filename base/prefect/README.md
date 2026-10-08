@@ -14,7 +14,6 @@
 
 ```sh
 cp .env.example .env
-mkdir -p postgres_data   # bind-mounted data directories must exist
 docker compose up -d
 ```
 
@@ -34,6 +33,22 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 ## Notes
 
 - The worker polls the `default` work pool; create it in the UI or with `prefect work-pool create default`.
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `postgres_data` | `prefect_postgres_data` | `prefect_postgres:/var/lib/postgresql/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `prefect`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p postgres_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Stop and clean up
 

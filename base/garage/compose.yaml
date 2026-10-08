@@ -17,7 +17,9 @@ services:
 
 volumes:
   garage_meta:
+    name: ${VOLUME_PREFIX:-garage}_garage_meta
   garage_data:
+    name: ${VOLUME_PREFIX:-garage}_garage_data
 
 networks:
   garage_network:

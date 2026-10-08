@@ -68,11 +68,12 @@ Every configuration is self-contained. Pick a directory, create your `.env`, and
 cd base/postgres          # or any other directory under base/ or stacks/
 cp .env.example .env      # if the directory has one; adjust the values
 docker compose up -d
-docker compose down       # stop (add -v to remove volumes)
+docker compose down       # stop (add -v to also delete the data volumes)
 ```
 
 - Optional components (admin UIs, init jobs) are behind Compose profiles, e.g. `docker compose --profile pgadmin up -d`. Each README lists the profiles.
-- Data is stored in `./<name>_data` directories or named volumes (ignored by git).
+- **Data lives in named Docker volumes**, so a fresh clone works without creating any directories. Their names are `<VOLUME_PREFIX>_<volume>` (the prefix defaults to the project directory name; set `VOLUME_PREFIX` in `.env` to change it).
+- **Want the data in a host folder?** Every project ships a `compose.bind.yaml` override: `docker compose -f compose.yaml -f compose.bind.yaml up -d` (create the directories listed in the file first; `DATA_DIR` moves them elsewhere).
 - All credentials in `.env.example` and the compose defaults are for **local development only**: change them before exposing anything.
 - Requires Docker Compose v2 (`docker compose`).
 

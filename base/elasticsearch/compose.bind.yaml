@@ -1,0 +1,43 @@
+# Store the data in host directories instead of Docker-managed volumes.
+#
+#   mkdir -p ${DATA_DIR:-.}/es01_data ${DATA_DIR:-.}/es02_data ${DATA_DIR:-.}/es03_data ${DATA_DIR:-.}/kibana_data ${DATA_DIR:-.}/certs_data ${DATA_DIR:-.}/apm_data
+#   docker compose -f compose.yaml -f compose.bind.yaml up -d
+#
+# DATA_DIR (default: this directory) can be set in .env or the environment.
+volumes:
+  es01_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/es01_data
+  es02_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/es02_data
+  es03_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/es03_data
+  kibana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/kibana_data
+  certs_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/certs_data
+  apm_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/apm_data

@@ -28,11 +28,7 @@ services:
 
 volumes:
   fastapi_logs:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./fastapi_logs
-      o: bind
+    name: ${VOLUME_PREFIX:-fastapi}_fastapi_logs
 
 networks:
   fastapi-net:

@@ -38,7 +38,8 @@ CI enforces most of this on every pull request (`.github/workflows/ci.yml`):
 - [ ] Defaults are for local development only and say so; no real secrets
 - [ ] You ran `scripts/smoke.sh <dir>` locally. If the project is lightweight, add it to the `smoke` matrix in `ci.yml`; if it needs lots of RAM or time, add it to `heavy-smoke.yml`
 - [ ] For S3-compatible stores, `scripts/s3-smoke.py` passes against the endpoint
-- [ ] Bind-mounted data directories are listed in the README (`mkdir -p ...`) and in `.gitignore`
+- [ ] Data uses named volumes with `name: ${VOLUME_PREFIX:-<project>}_<volume>` and the project has a `compose.bind.yaml` override for host directories (copy one from an existing project; CI checks that every volume is overridden)
+- [ ] Host directories used by `compose.bind.yaml` are listed in `.gitignore`
 
 ### 6. Commit Your Changes
 Commit your changes with a clear and concise commit message:

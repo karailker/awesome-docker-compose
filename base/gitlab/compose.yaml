@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: gitlab
       POSTGRES_DB: gitlabhq_production
     volumes:
-      - ./postgresql:/var/lib/postgresql/data
+      - postgresql_data:/var/lib/postgresql/data
     networks:
       - gitlab_network
     healthcheck:
@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - ./redis:/data
+      - redis_data:/data
     networks:
       - gitlab_network
     healthcheck:
@@ -64,9 +64,9 @@ services:
       - "8093:443"     # enable only when HTTPS is configured in Omnibus
       - "2222:22"
     volumes:
-      - ./config:/etc/gitlab
-      - ./logs:/var/log/gitlab
-      - ./data:/var/opt/gitlab
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
     extra_hosts:
       - "gitlab.local:127.0.0.1"   # so your host can resolve http://gitlab.local
     depends_on:
@@ -80,3 +80,15 @@ services:
 networks:
   gitlab_network:
     driver: bridge
+
+volumes:
+  postgresql_data:
+    name: ${VOLUME_PREFIX:-gitlab}_postgresql_data
+  redis_data:
+    name: ${VOLUME_PREFIX:-gitlab}_redis_data
+  gitlab_config:
+    name: ${VOLUME_PREFIX:-gitlab}_gitlab_config
+  gitlab_logs:
+    name: ${VOLUME_PREFIX:-gitlab}_gitlab_logs
+  gitlab_data:
+    name: ${VOLUME_PREFIX:-gitlab}_gitlab_data

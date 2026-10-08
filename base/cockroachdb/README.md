@@ -13,7 +13,6 @@ Single-node CockroachDB in insecure mode for development, with an optional job t
 
 ```sh
 cp .env.example .env
-mkdir -p cockroach_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose --profile init up initdb     # creates the database and user once
 ```
@@ -36,6 +35,22 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 ## Notes
 
 - `--insecure` disables TLS and authentication, so users have no passwords: development only. The database is created on first start by the image (`COCKROACH_DATABASE`); the `init` profile additionally creates the user.
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `cockroach_data` | `cockroachdb_cockroach_data` | `cockroach:/cockroach/cockroach-data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `cockroachdb`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p cockroach_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Stop and clean up
 

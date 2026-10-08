@@ -16,7 +16,6 @@ Self-hosted MLflow tracking server. Run metadata lives in PostgreSQL, artifacts 
 
 ```sh
 cp .env.example .env
-mkdir -p minio_data postgres_data
 docker compose up -d
 docker compose --profile init up createbuckets   # create the "mlflow" bucket (once)
 ```
@@ -44,6 +43,23 @@ with mlflow.start_run():
 
 See `.env.example`: MinIO credentials, PostgreSQL credentials, pgAdmin login and `AWS_REGION`.
 The Postgres credentials in the `mlflow` start command are currently the defaults (`myuser` / `mypassword` / `mydatabase`); update the `--backend-store-uri` if you change them.
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `minio_data` | `mlflow-minio-postgres-pgadmin_minio_data` | `minio:/data`, `minio-init-perms:/data` |
+| `postgres_data` | `mlflow-minio-postgres-pgadmin_postgres_data` | `postgres:/var/lib/postgresql/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `mlflow-minio-postgres-pgadmin`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p minio_data postgres_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Notes
 

@@ -13,7 +13,6 @@ MongoDB (authentication enabled) with an optional Mongo Express web UI. Based on
 
 ```sh
 cp .env.example .env
-mkdir -p mongodb_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose --profile mongo-express up -d
 ```
@@ -37,6 +36,22 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 - Keep the Mongo Express credentials in sync with the root credentials.
 - Source: <https://hub.docker.com/_/mongo>
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `mongodb_data` | `mongodb_mongodb_data` | `mongo:/data/db` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `mongodb`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p mongodb_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Stop and clean up
 

@@ -16,7 +16,6 @@
 
 ```sh
 cp .env.example .env
-mkdir -p milvus_data/etcd milvus_data/milvus milvus_data/minio   # bind-mounted data directories must exist
 docker compose up -d
 ```
 
@@ -42,6 +41,24 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 - The MinIO image is distroless and runs as a non-root user (uid `65532`). The one-shot `minio-init-perms` service (busybox) fixes the ownership of the data volume before MinIO starts, so no manual `chown` is needed.
 - The MinIO container has no healthcheck; `standalone` starts after it and restarts on failure until storage is reachable.
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `etcd_data` | `milvus_etcd_data` | `etcd:/etcd` |
+| `milvus_data` | `milvus_milvus_data` | `standalone:/var/lib/milvus` |
+| `minio_data` | `milvus_minio_data` | `minio:/minio_data`, `minio-init-perms:/minio_data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `milvus`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p milvus_data/etcd milvus_data/minio milvus_data/milvus
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Stop and clean up
 

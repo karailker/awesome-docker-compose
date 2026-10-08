@@ -57,7 +57,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 
 Ordered by user impact.
 
-1. **Bind volumes need pre-created directories.** About 20 projects declare volumes with `driver_opts: {type: none, o: bind, device: ./xxx_data}`. Docker does not create that directory, so `docker compose up` fails on a fresh clone until you `mkdir` it (the READMEs now say so, CI creates the directories with `scripts/prepare-dirs.sh`). Options: named volumes (works everywhere), or service-level bind mounts that Docker creates automatically. Needs a decision, see [Proposals](#proposals).
+1. ~~**Bind volumes need pre-created directories.**~~ Fixed: data now lives in named volumes (`<VOLUME_PREFIX>_<volume>`), and every project has a `compose.bind.yaml` override for host directories. CI validates the override for every project and runs a bind-mode smoke test for Postgres, MongoDB and Qdrant.
 2. **Many images use `latest`.** Examples: `postgres:latest` caused a breakage when Postgres 18 shipped, `confluentinc/cp-kafka:latest` dropped Zookeeper. Pin versions and let a bot propose updates.
 3. **MinIO is unmaintained.** `base/minio`, `base/milvus` and the three MLflow/W&B stacks still use the Chainguard MinIO build. Migrate to RustFS, SeaweedFS or Garage once those are exercised by the stacks.
 4. **Chainguard images run as non-root (uid 65532).** Data directories must be owned by that uid; every MinIO project now has a one-shot `minio-init-perms` service that fixes ownership first (found by the heavy run: Milvus' MinIO crashed with `file access denied`).
@@ -70,7 +70,7 @@ Ordered by user impact.
 Ideas for what to add next, grouped and roughly prioritized. Nothing here is committed to.
 
 ### Repository health (highest value)
-1. **Decide the volume strategy** (see known issue 1) and apply it to every project in one change.
+1. ~~Decide the volume strategy~~ Done: named volumes plus `compose.bind.yaml` (see known issue 1).
 2. **Pin image versions and add Renovate or Dependabot** (`docker-compose` ecosystem) so tags are updated by PRs that CI validates.
 3. **Project template** (`templates/base/`): `compose.yaml`, `.env.example`, `.gitignore`, `README.md` skeleton, so new projects start consistent. Extend CI with a check that every project has the same README sections.
 4. **Contributor checklist and PR template** that mirror what CI enforces (healthcheck present, versions pinned, README sections, listed in the root README).

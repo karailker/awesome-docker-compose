@@ -32,4 +32,18 @@ docker compose exec kafka kafka-topics --bootstrap-server localhost:29092 --crea
 | `KAFKA_UI_IMAGE` | `provectuslabs/kafka-ui:latest` | UI image |
 | `KAFKA_CLUSTER_ID` | development value | Generate your own with `kafka-storage random-uuid` |
 
-Data lives in the named volume `kafka_data`.
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `kafka_data` | `kafka_kafka_data` | `kafka:/var/lib/kafka/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `kafka`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p kafka_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).

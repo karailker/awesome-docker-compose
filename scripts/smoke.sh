@@ -12,6 +12,8 @@
 set -uo pipefail
 dir=$1; timeout=${2:-300}
 root=$(cd "$(dirname "$0")/.." && pwd)
+# SMOKE_BIND=1 runs the project with host directories (compose.bind.yaml) instead of named volumes
+if [ "${SMOKE_BIND:-}" = "1" ]; then export COMPOSE_FILE=compose.yaml:compose.bind.yaml BIND=1; fi
 "$root/scripts/prepare-dirs.sh" "$dir"
 cd "$dir" || exit 1
 

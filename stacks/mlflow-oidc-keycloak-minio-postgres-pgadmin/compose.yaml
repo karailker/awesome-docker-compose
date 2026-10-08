@@ -140,23 +140,11 @@ services:
 
 volumes:
   minio_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./minio_data
-      o: bind
+    name: ${VOLUME_PREFIX:-mlflow-oidc-keycloak-minio-postgres-pgadmin}_minio_data
   postgres_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./postgres_data
-      o: bind
+    name: ${VOLUME_PREFIX:-mlflow-oidc-keycloak-minio-postgres-pgadmin}_postgres_data
   keycloak_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./keycloak_data
-      o: bind
+    name: ${VOLUME_PREFIX:-mlflow-oidc-keycloak-minio-postgres-pgadmin}_keycloak_data
 
 networks:
   mflow-stack-network:

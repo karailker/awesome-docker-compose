@@ -13,7 +13,6 @@ ClickHouse columnar analytics database with the Tabix web SQL client.
 
 ```sh
 cp .env.example .env
-mkdir -p clickhouse_config clickhouse_data clickhouse_logs   # bind-mounted data directories must exist
 docker compose up -d
 ```
 
@@ -37,6 +36,24 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 ## Notes
 
 - Port 9000 (native protocol) conflicts with MinIO/RustFS if you run them at the same time.
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `clickhouse_config` | `clickhouse_clickhouse_config` | `clickhouse:/etc/clickhouse-server` |
+| `clickhouse_data` | `clickhouse_clickhouse_data` | `clickhouse:/var/lib/clickhouse` |
+| `clickhouse_logs` | `clickhouse_clickhouse_logs` | `clickhouse:/var/log/clickhouse-server` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `clickhouse`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p clickhouse_data clickhouse_logs clickhouse_config
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Stop and clean up
 

@@ -16,14 +16,12 @@ High-performance, S3-compatible object storage, using the hardened [Chainguard M
 
 ```sh
 cp .env.example .env      # optional, defaults are minioadmin / minioadmin
-mkdir -p minio_data       # bind-mount target for the volume
 docker compose up -d
 ```
 
 - Console: <http://localhost:9001>
 - S3 endpoint: <http://localhost:9000>
 
-Stop: `docker compose down` (add `-v` to drop the volume definition; data stays in `./minio_data`).
 
 ## Configuration
 
@@ -31,6 +29,22 @@ Stop: `docker compose down` (add `-v` to drop the volume definition; data stays 
 |----------|---------|-------------|
 | `MINIO_ROOT_USER` | `minioadmin` | Root access key |
 | `MINIO_ROOT_PASSWORD` | `minioadmin` | Root secret key (min. 8 chars) |
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `minio_data` | `minio_minio_data` | `minio:/data`, `minio-init-perms:/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `minio`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p minio_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Notes
 

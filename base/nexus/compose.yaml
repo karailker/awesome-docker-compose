@@ -23,11 +23,7 @@ services:
 
 volumes:
   nexus_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./nexus_data
-      o: bind
+    name: ${VOLUME_PREFIX:-nexus}_nexus_data
 
 networks:
   nexus-net:

@@ -31,9 +31,24 @@ aws --endpoint-url http://localhost:9000 s3 mb s3://my-bucket
 | `RUSTFS_SECRET_KEY` | `rustfsadmin` | Root secret key |
 | `RUSTFS_IMAGE` | `rustfs/rustfs:1.0.1` | Override the image/tag |
 
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `rustfs_data` | `rustfs_rustfs_data` | `rustfs:/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `rustfs`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p rustfs_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
+
 ## Notes
 
-- Data lives in the named volume `rustfs_data`; `docker compose down -v` deletes it.
 - The container runs as uid `10001`.
 - Replace the default credentials before exposing the ports. RustFS logs a warning while defaults are in use.
 - Tested in CI with a full S3 round trip (create bucket, put, get, list, delete).

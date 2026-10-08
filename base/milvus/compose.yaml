@@ -8,9 +8,7 @@ services:
       - ETCD_QUOTA_BACKEND_BYTES=${ETCD_QUOTA_BACKEND_BYTES:-4294967296}
       - ETCD_SNAPSHOT_COUNT=${ETCD_SNAPSHOT_COUNT:-50000}
     volumes:
-      - type: bind
-        source: ./milvus_data/etcd
-        target: /etcd
+      - etcd_data:/etcd
     command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
     networks:
       - milvus_network
@@ -26,9 +24,7 @@ services:
     user: "0:0"
     command: ["chown", "-R", "65532:65532", "/minio_data"]
     volumes:
-      - type: bind
-        source: ./milvus_data/minio
-        target: /minio_data
+      - minio_data:/minio_data
     restart: "no"
 
   minio:
@@ -41,9 +37,7 @@ services:
       - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
       - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
     volumes:
-      - type: bind
-        source: ./milvus_data/minio
-        target: /minio_data
+      - minio_data:/minio_data
     command: server /minio_data --console-address ":9001"
     ports:
       - "9000:9000"
@@ -61,9 +55,7 @@ services:
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
       - MINIO_REGION=${MINIO_REGION:-us-east-1}
     volumes:
-      - type: bind
-        source: ./milvus_data/milvus
-        target: /var/lib/milvus
+      - milvus_data:/var/lib/milvus
     command: ["milvus", "run", "standalone"]
     ports:
       - "19530:19530"
@@ -87,23 +79,11 @@ services:
 
 volumes:
   etcd_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./milvus_data/etcd
-      o: bind
+    name: ${VOLUME_PREFIX:-milvus}_etcd_data
   minio_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./milvus_data/minio
-      o: bind
+    name: ${VOLUME_PREFIX:-milvus}_minio_data
   milvus_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./milvus_data/milvus
-      o: bind
+    name: ${VOLUME_PREFIX:-milvus}_milvus_data
 
 networks:
   milvus_network:

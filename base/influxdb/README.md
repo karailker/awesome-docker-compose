@@ -13,7 +13,6 @@ InfluxDB 2 time-series database with an optional Telegraf agent that collects ho
 
 ```sh
 cp .env.example .env
-mkdir -p influxdb_config influxdb_data telegraf_data   # bind-mounted data directories must exist
 docker compose up -d
 docker compose --profile telegraf up -d    # add the Telegraf agent
 ```
@@ -38,6 +37,24 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 ## Notes
 
 - Telegraf is configured in `telegraf/telegraf.conf` and writes to the bucket above.
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `influxdb_config` | `influxdb_influxdb_config` | `influxdb:/etc/influxdb2` |
+| `influxdb_data` | `influxdb_influxdb_data` | `influxdb:/var/lib/influxdb2` |
+| `telegraf_data` | `influxdb_telegraf_data` | `telegraf:/var/lib/telegraf` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `influxdb`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p influxdb_data influxdb_config telegraf_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Stop and clean up
 

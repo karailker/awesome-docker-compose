@@ -32,9 +32,24 @@ S3 identities are defined in [`config/s3.json`](config/s3.json) (default key `se
 |----------|---------|-------------|
 | `SEAWEEDFS_IMAGE` | `chrislusf/seaweedfs:4.48` | Override the image/tag |
 
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `seaweedfs_data` | `seaweedfs_seaweedfs_data` | `seaweedfs:/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `seaweedfs`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p seaweedfs_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
+
 ## Notes
 
-- Data lives in the named volume `seaweedfs_data`; `docker compose down -v` deletes it.
 - For a production cluster run separate master / volume / filer / s3 services (see the SeaweedFS wiki).
 - Change the credentials in `config/s3.json` before exposing the ports.
 - Tested in CI with a full S3 round trip (create bucket, put, get, list, delete).

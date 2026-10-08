@@ -36,17 +36,9 @@ services:
 
 volumes:
   grafana_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./grafana_data
-      o: bind
+    name: ${VOLUME_PREFIX:-grafana}_grafana_data
   prometheus_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./prometheus_data
-      o: bind
+    name: ${VOLUME_PREFIX:-grafana}_prometheus_data
 
 networks:
   monitoring_network:

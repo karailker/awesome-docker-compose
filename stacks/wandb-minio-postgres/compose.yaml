@@ -122,11 +122,11 @@ services:
 
 volumes:
   wandb_data:
-    driver: local
+    name: ${VOLUME_PREFIX:-wandb-minio-postgres}_wandb_data
   minio_data:
-    driver: local
+    name: ${VOLUME_PREFIX:-wandb-minio-postgres}_minio_data
   mysql_data:
-    driver: local
+    name: ${VOLUME_PREFIX:-wandb-minio-postgres}_mysql_data
 
 networks:
   wandb-net:

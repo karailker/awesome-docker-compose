@@ -259,41 +259,17 @@ services:
 
 volumes:
   es01_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./es01_data
-      o: bind
+    name: ${VOLUME_PREFIX:-elasticsearch}_es01_data
   es02_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./es02_data
-      o: bind
+    name: ${VOLUME_PREFIX:-elasticsearch}_es02_data
   es03_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./es03_data
-      o: bind
+    name: ${VOLUME_PREFIX:-elasticsearch}_es03_data
   kibana_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./kibana_data
-      o: bind
+    name: ${VOLUME_PREFIX:-elasticsearch}_kibana_data
   certs_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./certs_data
-      o: bind
+    name: ${VOLUME_PREFIX:-elasticsearch}_certs_data
   apm_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./apm_data
-      o: bind
+    name: ${VOLUME_PREFIX:-elasticsearch}_apm_data
 
 networks:
   elastic_network:

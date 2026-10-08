@@ -17,7 +17,6 @@ MLflow with single sign-on through Keycloak using the [`mlflow-oidc-auth`](https
 
 ```sh
 cp .env.example .env
-mkdir -p minio_data postgres_data keycloak_data
 docker compose up -d
 docker compose --profile init up createbuckets   # once
 ```
@@ -36,6 +35,24 @@ docker compose --profile init up createbuckets   # once
 | `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` | see `.env.example` | pgAdmin login |
 
 The realm (`keycloak/realm-mlflow.json`) defines the `mlflow` realm, the `mlflow-client` client with redirect URI `http://localhost:5000/callback`, the `mlflow-users` group and a demo user.
+
+## Data and volumes
+
+Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
+
+| Volume | Default name | Mounted at |
+|---|---|---|
+| `keycloak_data` | `mlflow-oidc-keycloak-minio-postgres-pgadmin_keycloak_data` | `keycloak:/opt/keycloak/data` |
+| `minio_data` | `mlflow-oidc-keycloak-minio-postgres-pgadmin_minio_data` | `minio:/data`, `minio-init-perms:/data` |
+| `postgres_data` | `mlflow-oidc-keycloak-minio-postgres-pgadmin_postgres_data` | `postgres:/var/lib/postgresql/data` |
+
+- **Rename:** set `VOLUME_PREFIX` in `.env` (or the environment). Volumes are named `<VOLUME_PREFIX>_<volume>`; the default prefix is `mlflow-oidc-keycloak-minio-postgres-pgadmin`.
+- **Host folders instead:** use the override file, optionally with `DATA_DIR` (default: this directory):
+  ```sh
+  mkdir -p minio_data postgres_data keycloak_data
+  docker compose -f compose.yaml -f compose.bind.yaml up -d
+  ```
+- `docker compose down -v` deletes the volumes (and your data).
 
 ## Notes
 
