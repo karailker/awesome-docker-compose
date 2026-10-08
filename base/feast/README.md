@@ -27,7 +27,7 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 | Variable | Default | Description |
 |---|---|---|
-| `FEAST_IMAGE` | `quay.io/feastdev/feature-server:latest` | Image |
+| `FEAST_IMAGE` | `quay.io/feastdev/feature-server:0.66.0` | Image |
 | `FEAST_REPO_PATH` | `./feature_repo` | Host path of the feature repository |
 | `ONLINE_PORT` / `OFFLINE_PORT` | `6566` / `8815` | Server ports |
 | `REGISTRY_PORT` / `REGISTRY_REST_PORT` | `6570` / `6572` | Registry ports |
@@ -37,7 +37,7 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 ## Notes
 
 - Edit `feature_repo/feature_store.yaml` and add your feature definitions to the same folder, then run `feast apply` against it.
-- The image uses `latest`; pin a release for reproducible setups.
+- The image is pinned to a release; bump `FEAST_IMAGE` to upgrade.
 
 ## Stop and clean up
 

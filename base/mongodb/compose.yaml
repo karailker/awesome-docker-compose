@@ -1,6 +1,6 @@
 services:
   mongo:
-    image: mongo:latest
+    image: mongo:9.0.2
     restart: always
     container_name: mongo
     environment:
@@ -20,7 +20,7 @@ services:
       retries: 10
 
   mongo-express:
-    image: mongo-express:latest
+    image: mongo-express:1.0.2-18
     restart: always
     container_name: mongo-express
     profiles: ["mongo-express"]

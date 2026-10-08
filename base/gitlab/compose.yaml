@@ -33,7 +33,7 @@ services:
       retries: 10
 
   gitlab:
-    image: gitlab/gitlab-ce:latest
+    image: gitlab/gitlab-ce:19.4.1-ce.0
     container_name: gitlab
     restart: unless-stopped
     hostname: gitlab.local

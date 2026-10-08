@@ -8,7 +8,7 @@ GitLab Community Edition with external PostgreSQL and Redis.
 
 | Service | Image | Port(s) | Purpose |
 |---|---|---|---|
-| `gitlab` | `gitlab/gitlab-ce:latest` | 8090 (HTTP), 8093 (HTTPS), 2222 (SSH) | GitLab |
+| `gitlab` | `gitlab/gitlab-ce:19.4.1-ce.0` | 8090 (HTTP), 8093 (HTTPS), 2222 (SSH) | GitLab |
 | `postgresql` | `postgres:17` | internal | Database |
 | `redis` | `redis:7` | internal | Cache and queues |
 

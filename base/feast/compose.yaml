@@ -1,5 +1,5 @@
 x-defaults: &default-service
-  image: ${FEAST_IMAGE:-quay.io/feastdev/feature-server:latest}
+  image: ${FEAST_IMAGE:-quay.io/feastdev/feature-server:0.66.0}
   restart: unless-stopped
   environment:
     FEAST_USAGE: ${FEAST_USAGE:-local}

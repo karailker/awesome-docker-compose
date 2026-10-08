@@ -41,6 +41,8 @@ jobs:
         uses: docker://rhysd/actionlint:1.7.7
         with:
           args: -color
+      - name: Image tags are pinned
+        run: scripts/check-pins.sh
       - name: Every project is listed in the root README
         run: |
           rc=0

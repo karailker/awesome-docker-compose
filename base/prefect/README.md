@@ -6,8 +6,8 @@
 
 | Service | Image | Port(s) | Purpose |
 |---|---|---|---|
-| `prefect-server` | `prefecthq/prefect:3-latest` | 4200 | API and UI |
-| `prefect-worker-1` | `prefecthq/prefect:3-latest` | - | Worker for the `default` work pool |
+| `prefect-server` | `prefecthq/prefect:3.8.8-python3.12` | 4200 | API and UI |
+| `prefect-worker-1` | `prefecthq/prefect:3.8.8-python3.12` | - | Worker for the `default` work pool |
 | `prefect_postgres` | `postgres:17` | internal | Database |
 
 ## Quick start
@@ -29,7 +29,7 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 | `POSTGRES_DB` | `mydatabase` | Database (`.env.example` uses `mydb`) |
 | `POSTGRES_USER` | `myuser` | Database user |
 | `POSTGRES_PASSWORD` | `mypassword` | Database password |
-| `PREFECT_IMAGE` | `prefecthq/prefect:3-latest` | Server and worker image (pin a version) |
+| `PREFECT_IMAGE` | `prefecthq/prefect:3.8.8-python3.12` | Server and worker image (pin a version) |
 
 ## Notes
 

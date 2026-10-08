@@ -32,7 +32,7 @@ CI enforces most of this on every pull request (`.github/workflows/ci.yml`):
 - [ ] Directory `base/<name>/` or `stacks/<name>/` with `compose.yaml`, `.env.example` (if it has variables), `.gitignore` and `README.md`
 - [ ] README has: services table, quick start, access URLs and default credentials, configuration table, notes
 - [ ] Project is linked in the root `README.md` (CI fails otherwise)
-- [ ] Image tags are pinned (avoid `latest` unless there is no alternative)
+- [ ] Image tags are pinned to a version (CI runs `scripts/check-pins.sh`; unavoidable exceptions go in `scripts/pin-exceptions.txt` with a reason). Renovate (`renovate.json`) proposes updates
 - [ ] Every long-running service has a healthcheck, and the tool it uses exists in the image (many images ship `curl` but not `wget`, or the other way round)
 - [ ] `docker compose config -q` passes with and without `.env.example`
 - [ ] Defaults are for local development only and say so; no real secrets

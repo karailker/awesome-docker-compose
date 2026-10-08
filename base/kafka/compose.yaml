@@ -33,7 +33,7 @@ services:
       start_period: 20s
 
   kafka-ui:
-    image: ${KAFKA_UI_IMAGE:-provectuslabs/kafka-ui:latest}
+    image: ${KAFKA_UI_IMAGE:-provectuslabs/kafka-ui:v0.7.2}
     container_name: kafka-ui
     ports:
       - "8080:8080"

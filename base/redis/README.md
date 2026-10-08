@@ -6,7 +6,7 @@ Redis in-memory data store with an optional RedisInsight UI.
 
 | Service | Image | Port(s) | Purpose |
 |---|---|---|---|
-| `redis` | `redis:latest` | 6379 | Data store |
+| `redis` | `redis:8.10.2` | 6379 | Data store |
 | `redis-insight` | `redislabs/redisinsight` | 5540 | Web UI (profile `redis-insight`) |
 
 ## Quick start
@@ -22,7 +22,7 @@ docker compose --profile redis-insight up -d
 ## Notes
 
 - No password is configured: do not expose port 6379 beyond localhost.
-- The images use the `latest` tag; pin versions for reproducible setups. `redislabs/redisinsight` is the legacy repository name (`redis/redisinsight` is the current one).
+- Image versions are pinned. Redis 8 is licensed under the RSALv2/SSPLv1/AGPLv3 triple license; for a permissively licensed drop-in see [Valkey](../valkey/).
 
 ## Data and volumes
 

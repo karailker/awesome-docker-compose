@@ -1,0 +1,4 @@
+# Images that may keep a floating tag, with the reason.
+cgr.dev/chainguard/minio:latest # Chainguard's free tier only publishes :latest
+cgr.dev/chainguard/minio-client:latest-dev # Chainguard's free tier only publishes :latest(-dev)
+spoonest/clickhouse-tabix-web-client # only :latest is published

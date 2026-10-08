@@ -6,8 +6,8 @@ Grafana with a provisioned Prometheus data source and a sample dashboard.
 
 | Service | Image | Port(s) | Purpose |
 |---|---|---|---|
-| `grafana` | `grafana/grafana:latest` | 3000 | Dashboards |
-| `prometheus` | `prom/prometheus:latest` | 9090 | Metrics storage |
+| `grafana` | `grafana/grafana:13.2.3` | 3000 | Dashboards |
+| `prometheus` | `prom/prometheus:v3.15.0` | 9090 | Metrics storage |
 
 ## Quick start
 

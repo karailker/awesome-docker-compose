@@ -1,0 +1,39 @@
+name: Resolve image versions
+
+# Manual helper: prints the version label and digest a floating tag (for example "latest")
+# points to today, so it can be pinned. Useful for registries that are hard to query by hand.
+on:
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/resolve-pins.yml"]
+  workflow_dispatch:
+    inputs:
+      images:
+        description: "Space separated image references"
+        required: false
+        default: "quay.io/keycloak/keycloak:latest ghcr.io/mlflow/mlflow:latest quay.io/feastdev/feature-server:latest cgr.dev/chainguard/minio:latest"
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve
+        env:
+          IMAGES: ${{ inputs.images || 'quay.io/keycloak/keycloak:latest ghcr.io/mlflow/mlflow:latest quay.io/feastdev/feature-server:latest cgr.dev/chainguard/minio:latest' }}
+        run: |
+          for img in $IMAGES; do
+            repo=${img%:*}
+            digest=$(docker buildx imagetools inspect "$img" | awk '/^Digest:/{print $2; exit}')
+            echo "::group::$img ($digest)"
+            matches=""
+            # newest semver-looking tags first; compare manifest digests with the floating tag
+            for t in $(skopeo list-tags "docker://$repo" | jq -r '.Tags[]' | grep -E '^v?[0-9]+(\.[0-9]+){1,3}$' | sort -V -r | head -30); do
+              d="sha256:$(skopeo inspect --raw "docker://$repo:$t" | sha256sum | cut -d' ' -f1)"
+              if [ "$d" = "$digest" ]; then matches="$matches $t"; fi
+            done
+            echo "::endgroup::"
+            echo "RESOLVED $img -> ${matches:-no matching semver tag in the newest 30}"
+          done

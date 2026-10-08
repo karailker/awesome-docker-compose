@@ -17,7 +17,7 @@ services:
       timeout: 5s
       retries: 10
   pgadmin:
-    image: elestio/pgadmin:latest
+    image: elestio/pgadmin:REL-9_18
     container_name: pgadmin
     profiles: ["pgadmin"]
     environment:

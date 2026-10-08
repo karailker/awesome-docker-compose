@@ -29,7 +29,7 @@ docker compose exec kafka kafka-topics --bootstrap-server localhost:29092 --crea
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `KAFKA_IMAGE` | `confluentinc/cp-kafka:8.0.8` | Broker image |
-| `KAFKA_UI_IMAGE` | `provectuslabs/kafka-ui:latest` | UI image |
+| `KAFKA_UI_IMAGE` | `provectuslabs/kafka-ui:v0.7.2` | UI image |
 | `KAFKA_CLUSTER_ID` | development value | Generate your own with `kafka-storage random-uuid` |
 
 ## Data and volumes

@@ -6,7 +6,7 @@
 
 | Service | Image | Port(s) | Purpose |
 |---|---|---|---|
-| `qdrant` | `qdrant/qdrant:latest` | 6333 (REST), 6334 (gRPC) | Vector database |
+| `qdrant` | `qdrant/qdrant:v1.19.2` | 6333 (REST), 6334 (gRPC) | Vector database |
 
 ## Quick start
 
