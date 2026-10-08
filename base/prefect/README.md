@@ -29,10 +29,12 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 | `POSTGRES_DB` | `mydatabase` | Database (`.env.example` uses `mydb`) |
 | `POSTGRES_USER` | `myuser` | Database user |
 | `POSTGRES_PASSWORD` | `mypassword` | Database password |
+| `PREFECT_IMAGE` | `prefecthq/prefect:3-latest` | Server and worker image (pin a version) |
 
 ## Notes
 
-- The worker polls the `default` work pool; create it in the UI or with `prefect work-pool create default`.
+- The server uses PostgreSQL through `PREFECT_API_DATABASE_CONNECTION_URL`, waits for the database to be healthy, and the worker waits for the server's `/api/health`.
+- The worker polls the `default` work pool; `--type process` makes the worker create the pool (a `process` work pool) on first start.
 
 ## Data and volumes
 
