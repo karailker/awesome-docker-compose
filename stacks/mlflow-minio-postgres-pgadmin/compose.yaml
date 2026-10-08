@@ -20,8 +20,8 @@ services:
       AWS_SSL_VERIFY: "0"
     command: >
       /bin/sh -c "
-      pip install --upgrade psycopg2-binary &&
-      mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri postgresql://myuser:mypassword@postgres:5432/mydatabase --default-artifact-root s3://mlflow/
+      pip install --upgrade psycopg2-binary boto3 &&
+      mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri postgresql+psycopg2://myuser:mypassword@postgres:5432/mydatabase --default-artifact-root s3://mlflow/
       "
     ports:
       - "5000:5000"

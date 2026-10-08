@@ -79,6 +79,7 @@ Data is kept in Docker-managed named volumes, so nothing has to be created befor
 
 ## Notes
 
+- The start command installs `psycopg2-binary` and `boto3` (neither is in the MLflow image; boto3 is required for the S3 artifact store) and uses the explicit `postgresql+psycopg2://` URI, because SQLAlchemy 2.1 would otherwise pick the psycopg 3 driver.
 - `smoke-test.sh` (run by CI) logs a run with an artifact and reads it back through the store, for every variant.
 - Development defaults only; change all passwords before exposing the stack.
 
