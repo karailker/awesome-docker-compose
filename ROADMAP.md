@@ -25,6 +25,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `base/minio` | 🟡 legacy | PR smoke (starts) | MinIO Community Edition is unmaintained; Chainguard image is rebuilt from frozen source |
 | `base/prefect`, `nexus`, `sonarqube`, `apache-airflow`, `feast` | ✅ | heavy smoke | Prefect now really uses PostgreSQL (the old setting name was ignored) |
 | `stacks/mlflow-minio-postgres-pgadmin`, `mlflow-oidc-keycloak-minio-postgres-pgadmin` | ✅ | heavy smoke | start only; no tracking run or OIDC login is exercised |
+| `stacks/lgtm-observability` | ✅ | PR smoke + functional test | trace, metric and log round trip through the collector; Grafana provisioning checked; demo profile exercised in CI |
 | `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke | UI answers; real use of W&B Local may need a license/account |
 | `base/elasticsearch` | ✅ | heavy smoke | 3-node cluster, Kibana and APM server become healthy; ingestion is not tested |
 | `base/milvus` | ✅ | heavy smoke | needed the MinIO permission fix; no collection is created yet |
@@ -36,6 +37,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 - SonarQube, Sonatype Nexus, FastAPI example, InfluxDB + Telegraf, ClickHouse + Tabix, CockroachDB
 - RustFS, SeaweedFS, Garage (replacing unmaintained MinIO)
 - Weights & Biases Local stack (starts and serves the UI)
+- LGTM observability stack (Loki, Grafana, Tempo, Prometheus, OpenTelemetry Collector) with a functional round-trip test
 - CI: static checks, smoke tests, S3 compatibility tests, weekly heavy tests
 - README for every project
 
@@ -97,7 +99,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 | AI | Ollama + Open WebUI, Langfuse, LiteLLM proxy, ChromaDB | CPU-only examples are testable in CI with tiny models |
 
 ### New stacks
-- **Observability (LGTM)**: Grafana + Loki + Tempo + Prometheus + OpenTelemetry Collector with a sample instrumented app.
+- ~~Observability (LGTM)~~ Done (`stacks/lgtm-observability`). Follow-ups: Tempo span-metrics and service graph (metrics generator), Alertmanager with sample alert rules, container log collection (Grafana Alloy), a sample instrumented app.
 - **Data platform**: Postgres or ClickHouse + dbt + Airflow/Prefect + Superset/Metabase (this is also where dbt Core fits).
 - **RAG / LLM**: Ollama + Open WebUI + Qdrant or pgvector + Langfuse.
 - **Streaming**: Kafka or Redpanda + Schema Registry + Kafka Connect + ClickHouse sink.
@@ -105,7 +107,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 - **S3-backed stacks on the maintained stores**: MLflow and W&B variants using RustFS/SeaweedFS/Garage instead of MinIO.
 
 ### Testing improvements
-- Functional checks beyond "container is healthy": log an MLflow run and read it back, produce/consume on Kafka (Kafka was done by hand), run a query on each database, ingest a trace into the APM server.
+- Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for the LGTM stack). Next candidates: log an MLflow run and read it back, produce/consume on Kafka (Kafka was done by hand), run a query on each database, ingest a trace into the APM server.
 - A scheduled job that opens an issue when the weekly heavy run fails.
 - Resource budget per project in metadata (RAM/CPU) so the heavy workflow can pick the right runner and timeout.
 

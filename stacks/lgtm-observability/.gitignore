@@ -1,0 +1,5 @@
+loki_data/
+tempo_data/
+prometheus_data/
+grafana_data/
+.env
