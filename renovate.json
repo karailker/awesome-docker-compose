@@ -1,36 +1,103 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", ":dependencyDashboard"],
-  "schedule": ["before 6am on monday"],
-  "labels": ["dependencies"],
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "labels": [
+    "dependencies"
+  ],
   "prConcurrentLimit": 5,
-  "enabledManagers": ["docker-compose", "custom.regex", "github-actions"],
+  "enabledManagers": [
+    "docker-compose",
+    "dockerfile",
+    "pip_requirements",
+    "custom.regex",
+    "github-actions"
+  ],
   "customManagers": [
     {
       "description": "Images given as defaults of an environment variable: ${NAME:-image:tag}",
       "customType": "regex",
-      "managerFilePatterns": ["/(^|/)compose(\\.bind)?\\.ya?ml$/"],
-      "matchStrings": ["\\$\\{[A-Z0-9_]+:-(?<depName>[^\\s:$}]+):(?<currentValue>[^\\s}]+)\\}"],
+      "managerFilePatterns": [
+        "/(^|/)compose(\\.bind)?\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "\\$\\{[A-Z0-9_]+:-(?<depName>[^\\s:$}]+):(?<currentValue>[^\\s}]+)\\}"
+      ],
       "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [
     {
       "description": "Group all non-major image updates of a week into one PR",
-      "matchManagers": ["docker-compose", "custom.regex"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": [
+        "docker-compose",
+        "custom.regex"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "compose images (minor and patch)"
     },
     {
       "description": "Major upgrades of stateful services can break existing data: ask first (Dependency Dashboard)",
-      "matchManagers": ["docker-compose", "custom.regex"],
-      "matchUpdateTypes": ["major"],
+      "matchManagers": [
+        "docker-compose",
+        "custom.regex"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Minor upgrades of stateful or tightly coupled services (databases, brokers, Airflow, Milvus, GitLab, Python base image) can change config or data formats: ask first",
+      "matchManagers": [
+        "docker-compose",
+        "custom.regex",
+        "dockerfile"
+      ],
+      "matchPackageNames": [
+        "postgres",
+        "mysql",
+        "mongo",
+        "redis",
+        "valkey/valkey",
+        "cockroachdb/cockroach",
+        "clickhouse/clickhouse-server",
+        "influxdb",
+        "apache/airflow",
+        "milvusdb/milvus",
+        "gitlab/gitlab-ce",
+        "sonarqube",
+        "sonatype/nexus3",
+        "confluentinc/cp-kafka",
+        "prefecthq/prefect",
+        "python"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
       "dependencyDashboardApproval": true
     },
     {
       "description": "Keep GitHub Actions updates separate",
-      "matchManagers": ["github-actions"],
+      "matchManagers": [
+        "github-actions"
+      ],
       "groupName": "github actions"
+    },
+    {
+      "description": "Python dependencies of the FastAPI example",
+      "matchManagers": [
+        "pip_requirements"
+      ],
+      "groupName": "fastapi example dependencies"
     }
   ]
 }
