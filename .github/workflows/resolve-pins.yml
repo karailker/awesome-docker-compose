@@ -3,11 +3,14 @@ name: Resolve image versions
 # Manual helper: prints the version label and digest a floating tag (for example "latest")
 # points to today, so it can be pinned. Useful for registries that are hard to query by hand.
 on:
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/resolve-pins.yml"]
   workflow_dispatch:
     inputs:
       images:
         description: "Space separated image references"
-        required: true
+        required: false
         default: "quay.io/keycloak/keycloak:latest ghcr.io/mlflow/mlflow:latest quay.io/feastdev/feature-server:latest cgr.dev/chainguard/minio:latest"
 
 permissions:
@@ -19,7 +22,7 @@ jobs:
     steps:
       - name: Resolve
         env:
-          IMAGES: ${{ inputs.images }}
+          IMAGES: ${{ inputs.images || 'quay.io/keycloak/keycloak:latest ghcr.io/mlflow/mlflow:latest quay.io/feastdev/feature-server:latest cgr.dev/chainguard/minio:latest' }}
         run: |
           for img in $IMAGES; do
             echo "::group::$img"
