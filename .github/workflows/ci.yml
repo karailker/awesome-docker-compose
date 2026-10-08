@@ -36,7 +36,7 @@ jobs:
       - name: Validate JSON files
         run: find . -name '*.json' -not -path './.git/*' -print0 | xargs -0 -n1 python3 -m json.tool > /dev/null
       - name: ShellCheck scripts
-        run: shellcheck scripts/*.sh base/*/*.sh
+        run: shellcheck scripts/*.sh base/*/*.sh stacks/*/*.sh
       - name: Lint GitHub workflows
         uses: docker://rhysd/actionlint:1.7.7
         with:
@@ -181,11 +181,14 @@ jobs:
           - base/clickhouse
           - base/cockroachdb
           - base/fastapi
+          - stacks/lgtm-observability
     steps:
       - uses: actions/checkout@v4
       - name: Raise vm.max_map_count
         run: sudo sysctl -w vm.max_map_count=262144
       - run: scripts/smoke.sh "${{ matrix.project }}" 300
+        env:
+          SMOKE_DEMO: "1" # projects with a demo profile exercise it too
 
   bind-mode:
     name: Host directories (compose.bind.yaml) ${{ matrix.project }}

@@ -1,0 +1,160 @@
+# LGTM observability stack: Loki (logs), Grafana, Tempo (traces) and Prometheus (metrics), fed through an
+# OpenTelemetry Collector. Send OTLP to localhost:4317 (gRPC) or localhost:4318 (HTTP).
+services:
+  # The Loki, Tempo and Prometheus images run as non-root users; make the data volumes writable for them.
+  init-perms:
+    image: ${BUSYBOX_IMAGE:-busybox:1.37}
+    user: "0:0"
+    command:
+      - sh
+      - -c
+      - chown -R 10001:10001 /loki /tempo && chown -R 65534:65534 /prometheus && chown -R 472:0 /grafana
+    volumes:
+      - loki_data:/loki
+      - tempo_data:/tempo
+      - prometheus_data:/prometheus
+      - grafana_data:/grafana
+    restart: "no"
+
+  otel-collector:
+    image: ${OTELCOL_IMAGE:-otel/opentelemetry-collector-contrib:0.162.0}
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "${OTLP_GRPC_PORT:-4317}:4317" # OTLP gRPC
+      - "${OTLP_HTTP_PORT:-4318}:4318" # OTLP HTTP
+    volumes:
+      - ./config/otel-collector/config.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      tempo:
+        condition: service_started
+      loki:
+        condition: service_started
+      prometheus:
+        condition: service_healthy
+    networks:
+      - lgtm_network
+    restart: unless-stopped
+
+  tempo:
+    image: ${TEMPO_IMAGE:-grafana/tempo:3.1.0}
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    ports:
+      - "${TEMPO_PORT:-3200}:3200"
+    volumes:
+      - ./config/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    depends_on:
+      init-perms:
+        condition: service_completed_successfully
+    networks:
+      - lgtm_network
+    restart: unless-stopped
+
+  loki:
+    image: ${LOKI_IMAGE:-grafana/loki:3.7.8}
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./config/loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki_data:/loki
+    depends_on:
+      init-perms:
+        condition: service_completed_successfully
+    networks:
+      - lgtm_network
+    restart: unless-stopped
+
+  prometheus:
+    image: ${PROMETHEUS_IMAGE:-prom/prometheus:v3.15.0}
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-7d}
+      - --web.enable-otlp-receiver
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      init-perms:
+        condition: service_completed_successfully
+    networks:
+      - lgtm_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+  grafana:
+    image: ${GRAFANA_IMAGE:-grafana/grafana:13.2.3}
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      init-perms:
+        condition: service_completed_successfully
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_started
+      tempo:
+        condition: service_started
+    networks:
+      - lgtm_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  # Optional demo traffic: docker compose --profile demo up -d
+  telemetrygen-traces:
+    image: ${TELEMETRYGEN_IMAGE:-ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.162.0}
+    command: ["traces", "--otlp-insecure", "--otlp-endpoint=otel-collector:4317", "--service=demo-traces", "--rate=2", "--duration=${DEMO_DURATION:-30m}", "--child-spans=3"]
+    profiles: ["demo"]
+    depends_on: [otel-collector]
+    networks:
+      - lgtm_network
+  telemetrygen-metrics:
+    image: ${TELEMETRYGEN_IMAGE:-ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.162.0}
+    command: ["metrics", "--otlp-insecure", "--otlp-endpoint=otel-collector:4317", "--service=demo-metrics", "--rate=1", "--duration=${DEMO_DURATION:-30m}"]
+    profiles: ["demo"]
+    depends_on: [otel-collector]
+    networks:
+      - lgtm_network
+  telemetrygen-logs:
+    image: ${TELEMETRYGEN_IMAGE:-ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.162.0}
+    command: ["logs", "--otlp-insecure", "--otlp-endpoint=otel-collector:4317", "--service=demo-logs", "--rate=2", "--duration=${DEMO_DURATION:-30m}", "--body=demo log line"]
+    profiles: ["demo"]
+    depends_on: [otel-collector]
+    networks:
+      - lgtm_network
+
+volumes:
+  loki_data:
+    name: ${VOLUME_PREFIX:-lgtm-observability}_loki_data
+  tempo_data:
+    name: ${VOLUME_PREFIX:-lgtm-observability}_tempo_data
+  prometheus_data:
+    name: ${VOLUME_PREFIX:-lgtm-observability}_prometheus_data
+  grafana_data:
+    name: ${VOLUME_PREFIX:-lgtm-observability}_grafana_data
+
+networks:
+  lgtm_network:
+    driver: bridge

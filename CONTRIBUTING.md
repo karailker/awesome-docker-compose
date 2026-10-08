@@ -36,6 +36,7 @@ CI enforces most of this on every pull request (`.github/workflows/ci.yml`):
 - [ ] Every long-running service has a healthcheck, and the tool it uses exists in the image (many images ship `curl` but not `wget`, or the other way round)
 - [ ] `docker compose config -q` passes with and without `.env.example`
 - [ ] Defaults are for local development only and say so; no real secrets (CI runs gitleaks and `scripts/check-policy.py`: no privileged containers, host networking or Docker socket mounts; exceptions go in `scripts/policy-exceptions.txt` with a reason)
+- [ ] Projects with more than "it starts" behaviour ship an executable `smoke-test.sh` (see `stacks/lgtm-observability/`); `scripts/smoke.sh` runs it automatically
 - [ ] `make check` passes and you ran `make smoke P=<dir>` (or `scripts/smoke.sh <dir>`) locally. If the project is lightweight, add it to the `smoke` matrix in `ci.yml`; if it needs lots of RAM or time, add it to `heavy-smoke.yml`
 - [ ] For S3-compatible stores, `scripts/s3-smoke.py` passes against the endpoint
 - [ ] Data uses named volumes with `name: ${VOLUME_PREFIX:-<project>}_<volume>` and the project has a `compose.bind.yaml` override for host directories (copy one from an existing project; CI checks that every volume is overridden)

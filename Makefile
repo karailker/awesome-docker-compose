@@ -61,7 +61,7 @@ config: ## Validate every project (and its compose.bind.yaml) with 'docker compo
 lint: ## yamllint, JSON, ShellCheck, actionlint (those that are installed)
 	@command -v yamllint >/dev/null && yamllint -c .yamllint.yml . || echo "skip yamllint (pip install yamllint)"
 	@find . -name '*.json' -not -path './.git/*' -print0 | xargs -0 -n1 python3 -m json.tool >/dev/null
-	@command -v shellcheck >/dev/null && shellcheck scripts/*.sh base/*/*.sh || echo "skip shellcheck"
+	@command -v shellcheck >/dev/null && shellcheck scripts/*.sh base/*/*.sh stacks/*/*.sh || echo "skip shellcheck"
 	@command -v actionlint >/dev/null && actionlint .github/workflows/*.yml || echo "skip actionlint"
 
 pins: ## Fail on floating image tags

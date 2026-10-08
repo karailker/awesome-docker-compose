@@ -9,6 +9,7 @@
 #   - restarting / unhealthy   -> failure
 #   - health "starting"        -> keep waiting
 #   - running (no healthcheck) or healthy -> ok
+# A project may ship an executable smoke-test.sh (functional test); it runs once everything is up.
 set -uo pipefail
 dir=$1; timeout=${2:-300}
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -56,6 +57,12 @@ if [ $rc -eq 0 ]; then
   done
 fi
 
+# Optional functional test shipped with the project (runs against the running stack)
+if [ $rc -eq 0 ] && [ -x ./smoke-test.sh ]; then
+  echo "running $dir/smoke-test.sh"
+  ./smoke-test.sh || rc=1
+fi
+
 docker compose ps -a
 if [ $rc -ne 0 ]; then
   for c in $(docker compose ps -a -q); do
@@ -64,5 +71,5 @@ if [ $rc -ne 0 ]; then
   done
   docker compose logs --tail=100
 fi
-docker compose down -v --remove-orphans >/dev/null 2>&1
+docker compose --profile '*' down -v --remove-orphans >/dev/null 2>&1
 exit $rc
