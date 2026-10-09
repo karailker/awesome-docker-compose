@@ -236,6 +236,8 @@ services:
       - certs_data:/usr/share/apm-server/config/certs
       - apm_data:/usr/share/apm-server/data
       - ./config/apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+    # the setup job makes the certificates root:root with mode 640; group 0 lets the APM server read the CA
+    user: "1000:0"
     command: ["apm-server", "-e", "--strict.perms=false"]
     environment:
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-elasticpassword}
