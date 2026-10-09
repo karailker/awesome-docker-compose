@@ -48,7 +48,6 @@ services:
       feast -c ${FEAST_CONFIG_DIR:-/feature_repo}
       ui -h 0.0.0.0
       -p ${FEAST_UI_PORT:-8888}
-      -r ${FEAST_UI_REGISTRY_TTL_SEC:-5}
     ports:
       - "${FEAST_UI_PORT:-8888}:${FEAST_UI_PORT:-8888}"
 

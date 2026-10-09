@@ -1,0 +1,41 @@
+# pgvector instead of Qdrant as Open WebUI's vector database:
+#   docker compose -f compose.yaml -f compose.pgvector.yaml up -d
+# (or COMPOSE_FILE=compose.yaml:compose.pgvector.yaml in .env)
+# Qdrant is moved behind the "qdrant" profile, so it does not start. Use one variant per
+# openwebui_data volume: the stored vectors live in the vector database that was active.
+services:
+  pgvector:
+    image: ${PGVECTOR_IMAGE:-pgvector/pgvector:pg17}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-openwebui}
+      POSTGRES_USER: ${POSTGRES_USER:-openwebui}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openwebui}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PGVECTOR_PORT:-5432}:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    networks:
+      - rag_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-openwebui} -d ${POSTGRES_DB:-openwebui}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  qdrant:
+    profiles: ["qdrant"]
+
+  open-webui:
+    environment:
+      VECTOR_DB: pgvector
+      PGVECTOR_DB_URL: postgresql://${POSTGRES_USER:-openwebui}:${POSTGRES_PASSWORD:-openwebui}@pgvector:5432/${POSTGRES_DB:-openwebui}
+    depends_on: !override
+      ollama:
+        condition: service_healthy
+      pgvector:
+        condition: service_healthy
+
+volumes:
+  pgvector_data:
+    name: ${VOLUME_PREFIX:-rag-ollama-openwebui-qdrant}_pgvector_data

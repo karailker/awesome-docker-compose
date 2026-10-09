@@ -1,0 +1,5 @@
+postgres_data/
+clickhouse_data/
+clickhouse_logs/
+redis_data/
+s3_data/

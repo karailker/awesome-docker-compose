@@ -1,0 +1,14 @@
+name: shop
+version: "1.0.0"
+config-version: 2
+profile: shop
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+
+models:
+  shop:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

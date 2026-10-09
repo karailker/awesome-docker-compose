@@ -1,0 +1,67 @@
+# Service templates for projects that need an S3-compatible object store. Projects use them with
+#   s3:
+#     extends: {file: ../../shared/s3/compose.yaml, service: s3}
+#     networks: [<project network>]
+# (see shared/s3/README.md). The S3 API is http://s3:9000 inside the network and localhost:9000 on
+# the host for every variant. The project declares the `s3_data` volume and the networks.
+services:
+  s3:
+    # RustFS (default). compose.seaweedfs.yaml / compose.garage.yaml of the project switch the store.
+    image: ${RUSTFS_IMAGE:-rustfs/rustfs:1.0.1}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # RustFS console
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+    volumes:
+      - s3_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  create-bucket:
+    # One-shot job: creates the buckets in S3_BUCKETS (space separated) if they do not exist yet.
+    # The project sets S3_BUCKETS.
+    image: ${AWSCLI_IMAGE:-amazon/aws-cli:2.37.11}
+    depends_on:
+      s3:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for b in $$S3_BUCKETS; do
+          until aws --endpoint-url http://s3:9000 s3api head-bucket --bucket "$$b" 2>/dev/null \
+             || aws --endpoint-url http://s3:9000 s3 mb "s3://$$b"; do sleep 2; done
+          echo "bucket $$b is ready"
+        done
+    restart: "no"
+
+  garage-init:
+    # Garage only: one-time bootstrap through the admin API (layout, access key, buckets).
+    # Used by the projects' compose.garage.yaml. The project sets S3_BUCKETS.
+    image: ${CURL_IMAGE:-curlimages/curl:8.22.0}
+    depends_on:
+      s3:
+        condition: service_started
+    environment:
+      GARAGE_HOST: s3
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:-dev-admin-token-change-me}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+    entrypoint: ["/bin/sh", "/garage-init.sh"]
+    volumes:
+      - ./garage-init.sh:/garage-init.sh:ro
+    restart: "no"

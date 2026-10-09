@@ -31,6 +31,8 @@ jobs:
           - stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin
           - stacks/wandb-minio-postgres
           - stacks/rag-ollama-openwebui-qdrant
+          - stacks/data-platform-postgres-dbt-prefect-metabase
+          - stacks/langfuse-postgres-clickhouse-s3
         variant: [""]
         include:
           # object-store variants (compose.<variant>.yaml) of the projects that need S3
@@ -42,6 +44,9 @@ jobs:
           - { project: stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin, variant: garage }
           - { project: stacks/wandb-minio-postgres, variant: seaweedfs }
           - { project: stacks/wandb-minio-postgres, variant: garage }
+          - { project: stacks/rag-ollama-openwebui-qdrant, variant: pgvector }
+          - { project: stacks/langfuse-postgres-clickhouse-s3, variant: seaweedfs }
+          - { project: stacks/langfuse-postgres-clickhouse-s3, variant: garage }
     steps:
       - uses: actions/checkout@v4
       - name: Raise vm.max_map_count (Elasticsearch / SonarQube)

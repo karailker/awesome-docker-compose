@@ -11,3 +11,8 @@ paths = [
   '''(^|/)elasticsearch/compose\.yaml''',    # healthcheck "curl -s --cacert ..." matches the curl-auth rule
   '''\.gitleaks-baseline\.json''',
 ]
+
+# Langfuse demo API keys documented in stacks/langfuse-postgres-clickhouse-s3 (headless init defaults)
+regexes = [
+  '''(pk|sk)-lf-demo''',
+]

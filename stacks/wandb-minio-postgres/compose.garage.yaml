@@ -21,22 +21,13 @@ services:
       disable: true
 
   garage-init:
-    image: ${CURL_IMAGE:-curlimages/curl:8.22.0}
-    depends_on:
-      s3:
-        condition: service_started
+    extends:
+      file: ../../shared/s3/compose.yaml
+      service: garage-init
     environment:
-      GARAGE_HOST: s3
-      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:-dev-admin-token-change-me}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
       S3_BUCKETS: ${S3_BUCKET:-wandb-bucket}
-    entrypoint: ["/bin/sh", "/garage-init.sh"]
-    volumes:
-      - ../../shared/s3/garage-init.sh:/garage-init.sh:ro
     networks:
       - wandb-net
-    restart: "no"
 
   create-bucket:
     depends_on: !override

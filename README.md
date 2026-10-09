@@ -42,6 +42,8 @@ These are pre-configured setups combining multiple services for specific use cas
 - **[MLflow with S3 store (RustFS/SeaweedFS/Garage) and Postgres](stacks/mlflow-minio-postgres-pgadmin/)**: A stack for managing the machine learning lifecycle, including an S3-compatible object store (RustFS by default) and Postgres for metadata storage.
 - **[MLflow-OIDC with Keycloak, S3 store, and Postgres](stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin/)**: Enterprise MLflow setup with OpenID Connect authentication via Keycloak, object storage on RustFS/SeaweedFS/Garage, and PostgreSQL for metadata.
 
+- **[Data platform (PostgreSQL + dbt + Prefect + Metabase)](stacks/data-platform-postgres-dbt-prefect-metabase/)**: Warehouse, transformations, scheduling and BI in one stack, with a sample dbt project and an end-to-end test.
+- **[Langfuse (LLM observability)](stacks/langfuse-postgres-clickhouse-s3/)**: Self-hosted Langfuse v4 with PostgreSQL, ClickHouse, Redis and an S3 store (RustFS / SeaweedFS / Garage).
 - **[LGTM observability (Loki, Grafana, Tempo, Prometheus + OpenTelemetry Collector)](stacks/lgtm-observability/)**: Logs, metrics and traces through one OTLP endpoint, with provisioned data sources, trace-to-log links and an overview dashboard.
 - **[Local RAG / LLM (Ollama + Open WebUI + Qdrant)](stacks/rag-ollama-openwebui-qdrant/)**: Private chat UI with document question answering; Ollama runs the models, Qdrant stores the embeddings.
 - **[Weights & Biases Local with S3 store and MySQL](stacks/wandb-minio-postgres/)**: Self-hosted W&B experiment tracking with S3-compatible artifact storage.

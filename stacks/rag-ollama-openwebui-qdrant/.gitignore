@@ -2,3 +2,4 @@ ollama_data/
 qdrant_data/
 openwebui_data/
 .env
+pgvector_data/
