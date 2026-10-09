@@ -55,11 +55,27 @@ apm_diagnostics() {  # printed when the test fails after the APM step has starte
 trap apm_diagnostics EXIT
 retry 180 "the transaction is stored in Elasticsearch (traces-apm*)" apm_stored
 
-# OpenTelemetry: send a span as OTLP/HTTP (JSON) to the APM server's OTLP endpoint and find it by trace id
+# OpenTelemetry: send a span as OTLP/HTTP (protobuf; the APM server does not accept JSON) and find it by trace id
 otid=$(openssl rand -hex 16); osid=$(openssl rand -hex 8)
-ostart=$(($(date +%s) * 1000000000)); oend=$((ostart + 25000000))
-span="{\"resourceSpans\":[{\"resource\":{\"attributes\":[{\"key\":\"service.name\",\"value\":{\"stringValue\":\"smoke-otel-service\"}}]},\"scopeSpans\":[{\"scope\":{\"name\":\"smoke\"},\"spans\":[{\"traceId\":\"$otid\",\"spanId\":\"$osid\",\"name\":\"smoke-otel-span\",\"kind\":2,\"startTimeUnixNano\":\"$ostart\",\"endTimeUnixNano\":\"$oend\",\"status\":{\"code\":1}}]}]}]}"
-code=$(curl -sS -m 30 -o /tmp/apm-otlp.out -w '%{http_code}' -H "$JSON" -d "$span" "$APM/v1/traces") || fail "OTLP request to the APM server failed"
+py '
+import struct, sys, time
+def varint(n):
+    out = b""
+    while True:
+        b = n & 0x7F; n >>= 7
+        out += bytes([b | (0x80 if n else 0)])
+        if not n: return out
+def field(num, wire, payload): return varint(num << 3 | wire) + payload
+def ld(num, data): return field(num, 2, varint(len(data)) + data)
+def text(num, s): return ld(num, s.encode())
+start = int(time.time() * 1e9)
+span = (ld(1, bytes.fromhex(sys.argv[1])) + ld(2, bytes.fromhex(sys.argv[2])) + text(5, "smoke-otel-span")
+        + field(6, 0, varint(2)) + field(7, 1, struct.pack("<Q", start)) + field(8, 1, struct.pack("<Q", start + 25000000)))
+resource = ld(1, text(1, "service.name") + ld(2, text(1, "smoke-otel-service")))
+scope_spans = ld(1, text(1, "smoke")) + ld(2, span)
+sys.stdout.buffer.write(ld(1, ld(1, resource) + ld(2, scope_spans)))
+' "$otid" "$osid" > /tmp/apm-otlp.pb
+code=$(curl -sS -m 30 -o /tmp/apm-otlp.out -w '%{http_code}' -H 'Content-Type: application/x-protobuf' --data-binary @/tmp/apm-otlp.pb "$APM/v1/traces") || fail "OTLP request to the APM server failed"
 case $code in 2??) step "OTLP span $osid (trace $otid) accepted by the APM server (HTTP $code)" ;; *) fail "APM OTLP endpoint answered HTTP $code: $(head -c 400 /tmp/apm-otlp.out)" ;; esac
 otel_stored() {
   es "https://localhost:9200/traces-apm*/_search" -d "{\"query\":{\"term\":{\"trace.id\":\"$otid\"}}}" \
