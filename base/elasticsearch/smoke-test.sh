@@ -48,7 +48,7 @@ apm_diagnostics() {  # printed when the test fails after the APM step has starte
   [ "$rc" -eq 0 ] && return
   echo "--- APM diagnostics"
   curl -sS -m 10 "$APM/" | head -c 400; echo
-  docker compose logs --no-color --tail=60 apm-server 2>&1 | cut -c1-300
+  docker compose logs --no-color --tail=60 apm-server 2>&1 | grep -E "\"log.level\":\"(error|warn)\"" | cut -c1-1500
   es "https://localhost:9200/_cat/indices/*apm*?v&h=index,docs.count,health" 2>&1 | head -20
   es "https://localhost:9200/_data_stream/*apm*?filter_path=data_streams.name" 2>&1 | head -c 600; echo
 }
