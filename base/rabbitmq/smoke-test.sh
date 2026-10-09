@@ -12,7 +12,7 @@ API=http://localhost:15672/api
 api() { curl -fsS -m 30 -u "$U:$P" -H "$JSON" "$@"; }
 
 retry 180 "management API answers" api "$API/overview"
-api -X PUT -d '{"durable":false,"auto_delete":false}' "$API/queues/%2F/smoke" || fail "cannot declare the queue"
+api -X PUT -d '{"durable":true,"auto_delete":false}' "$API/queues/%2F/smoke" || fail "cannot declare the queue"
 pub=$(api -X POST -d '{"properties":{},"routing_key":"smoke","payload":"hello rabbit","payload_encoding":"string"}' "$API/exchanges/%2F/amq.default/publish") || fail "publish failed"
 printf '%s' "$pub" | grep -q '"routed":true' || fail "the message was not routed: $pub"
 step "message published and routed to the queue"

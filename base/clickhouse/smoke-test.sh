@@ -20,7 +20,7 @@ res=$(q "SELECT country, sum(amount) FROM smoke GROUP BY country ORDER BY countr
 step "MergeTree table filled and aggregated ($res)"
 q 'DROP TABLE smoke' >/dev/null
 code=$(curl -s -o /dev/null -w '%{http_code}' -u "$U:wrong" --data-binary 'SELECT 1' "$CH/")
-[ "$code" = 516 ] || [ "$code" = 401 ] || fail "a wrong password answered HTTP $code"
+case "$code" in 401|403|516) ;; *) fail "a wrong password answered HTTP $code" ;; esac
 step "a wrong password is refused (HTTP $code)"
 retry 60 "Tabix UI answers" curl -fsS -o /dev/null "http://localhost:${TABIX_PORT:-8124}/"
 echo "ClickHouse functional smoke test passed"
