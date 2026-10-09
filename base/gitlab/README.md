@@ -2,7 +2,7 @@
 
 GitLab Community Edition with external PostgreSQL and Redis.
 
-> Work in progress (see the roadmap in the root README). Needs at least 4 GB of RAM and several minutes for the first start. The Omnibus settings in `compose.yaml` use a small footprint (`puma['worker_processes'] = 0`, `sidekiq['concurrency'] = 10`, Prometheus off, `shm_size: 256m`); remove them for a multi-user instance.
+> Work in progress (see the roadmap in the root README). Needs at least 4 GB of RAM and several minutes for the first start. The Omnibus settings in `compose.yaml` use a small footprint (`puma['worker_processes'] = 0`, `sidekiq['concurrency'] = 10`, Prometheus off, `shm_size: 256m`); remove them for a multi-user instance. The external PostgreSQL runs with `max_locks_per_transaction=256`: with the default of 64 GitLab's migrations fail with `ERROR: out of shared memory` and the container restarts in a loop.
 
 ## Services
 
