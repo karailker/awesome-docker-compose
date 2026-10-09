@@ -2,7 +2,7 @@
 
 Three-node Elasticsearch 8 cluster with TLS, Kibana and an APM server. Based on [evermight/elastic-cluster-docker-compose](https://github.com/evermight/elastic-cluster-docker-compose/blob/master/docker-compose.yml).
 
-> **APM:** the APM server integration is under development and may not work yet (see the root README).
+> **APM:** the APM server reads `config/apm-server.yml` (the image does not take `output.elasticsearch.*` settings from environment variables). `smoke-test.sh` sends a transaction to the APM server and requires it to appear in the `traces-apm*` data stream.
 
 ## Services
 

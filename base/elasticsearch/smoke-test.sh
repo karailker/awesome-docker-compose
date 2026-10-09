@@ -42,5 +42,16 @@ apm_stored() {
   es "https://localhost:9200/traces-apm*/_search" -d "{\"query\":{\"term\":{\"transaction.id\":\"$xid\"}}}" \
     | py 'import json,sys; sys.exit(0 if json.load(sys.stdin)["hits"]["total"]["value"] >= 1 else 1)'
 }
+apm_diagnostics() {  # printed when the test fails after the APM step has started
+  rc=$?
+  [ "$rc" -eq 0 ] && return
+  echo "--- APM diagnostics"
+  curl -sS -m 10 "$APM/" | head -c 400; echo
+  docker compose logs --no-color --tail=60 apm-server 2>&1 | cut -c1-300
+  es "https://localhost:9200/_cat/indices/*apm*?v&h=index,docs.count,health" 2>&1 | head -20
+  es "https://localhost:9200/_data_stream/*apm*?filter_path=data_streams.name" 2>&1 | head -c 600; echo
+}
+trap apm_diagnostics EXIT
 retry 180 "the transaction is stored in Elasticsearch (traces-apm*)" apm_stored
+trap - EXIT
 echo "Elasticsearch functional smoke test passed"
