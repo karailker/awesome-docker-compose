@@ -3,3 +3,4 @@ tempo_data/
 prometheus_data/
 grafana_data/
 .env
+alertmanager_data/

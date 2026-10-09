@@ -13,7 +13,7 @@ Legend: ✅ done and verified · 🟡 done, not verified end to end · 🚧 in p
 | **Smoke** | `scripts/smoke.sh`: start the project, wait for health, fail on crashed/unhealthy/restarting containers (one-shot jobs that exit 0 are fine) | every PR (lightweight projects), weekly + on demand (heavy projects) |
 | **Bind mode** | same smoke test with `compose.bind.yaml` (host directories) | every PR (Postgres, MongoDB, Qdrant) |
 | **S3 round trip** | create bucket, put, get, list, delete through the S3 API | every PR (RustFS, SeaweedFS, Garage) |
-| **Functional** | a project's own `smoke-test.sh` runs after startup (real requests through the stack) | every PR (LGTM stack), weekly + on demand (RAG stack) |
+| **Functional** | a project's own `smoke-test.sh` runs after startup (real requests through the stack) | every PR (Kafka, Metabase, LGTM stack), weekly + on demand (all heavy projects) |
 | **Security** | gitleaks (full history), Trivy (secrets, Dockerfiles), compose policy; weekly image vulnerability report | every PR / weekly |
 
 Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scripts/s3-smoke.py <endpoint> <key> <secret>`.
@@ -22,20 +22,27 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 
 | Project | State | Verified by | Notes |
 |---------|-------|-------------|-------|
-| `base/postgres`, `pgvector`, `mysql`, `mongodb`, `redis`, `valkey`, `rabbitmq`, `qdrant`, `kafka`, `grafana`, `influxdb`, `clickhouse`, `cockroachdb`, `fastapi` | ✅ | PR smoke | |
+| `base/postgres`, `pgvector`, `mysql`, `mongodb`, `redis`, `valkey`, `rabbitmq`, `qdrant`, `grafana`, `influxdb`, `clickhouse`, `cockroachdb`, `fastapi` | ✅ | PR smoke | |
+| `base/kafka` | ✅ | PR smoke + functional test | topic created, 3 messages produced and consumed |
 | `base/rustfs`, `seaweedfs`, `garage` | ✅ | PR smoke + S3 round trip | maintained S3 stores |
 | `base/minio` | 🟡 legacy | PR smoke (starts) | MinIO Community Edition is unmaintained; Chainguard image is rebuilt from frozen source |
-| `base/prefect`, `nexus`, `sonarqube`, `apache-airflow`, `feast` | ✅ | heavy smoke | Prefect now really uses PostgreSQL (the old setting name was ignored) |
+| `base/prefect` | ✅ | heavy smoke + functional test | API, online worker in the `default` pool, schema present in PostgreSQL |
+| `base/nexus` | ✅ | heavy smoke + functional test | hosted raw repository created, file uploaded and downloaded |
+| `base/sonarqube` | ✅ | heavy smoke + functional test | status UP, project created and found through the API |
+| `base/apache-airflow` | ✅ | heavy smoke + functional test | example DAG unpaused, triggered and run to success on the Celery worker |
+| `base/feast` | ✅ | heavy smoke + functional test | online server, registry REST API and UI answer (the UI crash-looped on an obsolete `-r` option before the test existed) |
 | `stacks/mlflow-minio-postgres-pgadmin` | ✅ | heavy smoke x3 object stores + functional test | RustFS (default), SeaweedFS, Garage; logs a run with an artifact and reads it back |
 | `stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin` | ✅ | heavy smoke x3 object stores + functional test | bucket write/read/delete; the OIDC login itself is not exercised |
-| `stacks/rag-ollama-openwebui-qdrant` | ✅ | heavy smoke + functional test | models download, embeddings, generation, Qdrant similarity search and an Open WebUI upload that lands in Qdrant; the GPU override is untested (no GPU runners) |
-| `stacks/lgtm-observability` | ✅ | PR smoke + functional test | trace, metric and log round trip through the collector; Grafana provisioning checked; demo profile exercised in CI |
+| `stacks/rag-ollama-openwebui-qdrant` | ✅ | heavy smoke (Qdrant and pgvector variants) + functional test | models download, embeddings, generation, similarity search and an Open WebUI upload that lands in the vector database; the GPU override is untested (no GPU runners) |
+| `stacks/lgtm-observability` | ✅ | PR smoke + functional test | trace, metric and log round trip through the collector; span metrics from Tempo; alert rules loaded and the Watchdog alert reaches Alertmanager; Grafana provisioning checked; demo profile exercised in CI |
+| `stacks/langfuse-postgres-clickhouse-s3` | ✅ | heavy smoke x3 object stores + functional test | headless init, trace ingested through the public API and read back (web, Redis, worker, ClickHouse, S3) |
+| `stacks/data-platform-postgres-dbt-prefect-metabase` | ✅ | heavy smoke + functional test | Prefect run -> dbt seed/run/test -> mart table in Postgres -> queried through Metabase |
 | `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke x3 object stores + functional test | UI answers and the bucket is writable; real use of W&B Local may need a license/account |
 | `base/metabase` | ✅ | PR smoke + functional test | setup via API, sample database added, native SQL query |
 | `base/superset` | ✅ | heavy smoke + functional test | API login, sample database registered, SQL Lab query; the image is built locally to add the PostgreSQL driver |
-| `base/elasticsearch` | ✅ | heavy smoke | 3-node cluster, Kibana and APM server become healthy; ingestion is not tested |
+| `base/elasticsearch` | ✅ | heavy smoke + functional test | 3 nodes green, document indexed and searched, Kibana available; APM ingestion is still not tested |
 | `base/milvus` | ✅ | heavy smoke x3 object stores + functional test | collection, insert and similarity search via REST |
-| `base/gitlab` | ✅ starts | heavy smoke | needs about 4 GB RAM; credentials are hard-coded and `external_url` does not match the published port |
+| `base/gitlab` | ✅ | heavy smoke + functional test | root signs in over OAuth and creates a project through the API; needs about 4 GB RAM; credentials are hard-coded and `external_url` does not match the published port |
 
 ## Roadmap items
 
@@ -43,7 +50,10 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 - SonarQube, Sonatype Nexus, FastAPI example, InfluxDB + Telegraf, ClickHouse + Tabix, CockroachDB
 - RustFS, SeaweedFS, Garage (replacing unmaintained MinIO); Milvus, both MLflow stacks and W&B migrated, each with RustFS (default), SeaweedFS and Garage variants (`compose.<variant>.yaml`)
 - Weights & Biases Local stack (starts and serves the UI)
-- LGTM observability stack (Loki, Grafana, Tempo, Prometheus, OpenTelemetry Collector) with a functional round-trip test
+- LGTM observability stack (Loki, Grafana, Tempo, Prometheus, OpenTelemetry Collector) with a functional round-trip test, plus Tempo span metrics / service graph and Alertmanager with sample alert rules
+- Data platform stack (PostgreSQL, dbt, Prefect, Metabase), Langfuse stack, pgvector variant of the RAG stack
+- Functional `smoke-test.sh` for every project that is part of the heavy workflow (helpers in `scripts/smoke-lib.sh`)
+- `s3` / `create-bucket` / `garage-init` defined once in `shared/s3/compose.yaml` and reused with `extends`
 - Local RAG stack (Ollama, Open WebUI, Qdrant) with a functional test from model download to a document landing in Qdrant
 - Named volumes with `compose.bind.yaml`, pinned image versions with Renovate, security scans, Makefile, contributor checklist and PR template
 - CI: static checks, smoke tests, S3 compatibility tests, weekly heavy tests
@@ -93,7 +103,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 5. ~~Security scanning~~ Done: gitleaks (full history, baseline for old findings), Trivy for secrets and Dockerfile misconfiguration, a compose policy check, and a weekly image/dependency vulnerability report. The scans already found two real problems (see known issues 8 and 9).
 6. ~~Helper entrypoint~~ Done: `Makefile` (`make help`).
 7. **Generated project index** in the root README (from a small metadata file per project) so the list cannot drift from the directory tree.
-8. **Include-based stacks.** Compose `include:` lets stacks reuse `base/*` definitions instead of copying them (the MLflow stacks currently duplicate MinIO, Postgres and pgAdmin).
+8. **Sharing definitions.** The S3 services are shared through `extends` (`shared/s3/compose.yaml`). Postgres, pgAdmin and Redis definitions are still copied between stacks; the same approach could be used for them.
 
 ### New base services
 | Area | Candidates | Notes |
@@ -107,14 +117,14 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 | AI | Langfuse, LiteLLM proxy, ChromaDB | Ollama + Open WebUI + Qdrant already ship in `stacks/rag-ollama-openwebui-qdrant`; CPU-only examples are testable in CI with small models |
 
 ### New stacks
-- ~~Observability (LGTM)~~ Done (`stacks/lgtm-observability`). Follow-ups: Tempo span-metrics and service graph (metrics generator), Alertmanager with sample alert rules, container log collection (Grafana Alloy), a sample instrumented app.
-- **Data platform**: Postgres or ClickHouse + dbt + Airflow/Prefect + Superset/Metabase (the BI parts exist now as `base/superset` and `base/metabase`) (this is also where dbt Core fits).
-- ~~RAG / LLM~~ Ollama + Open WebUI + Qdrant added (`stacks/rag-ollama-openwebui-qdrant`). Follow-ups: Langfuse for tracing, a pgvector variant, LiteLLM proxy in front of Ollama, a GPU CI runner.
+- ~~Observability (LGTM)~~ Done (`stacks/lgtm-observability`). Span metrics, service graph and Alertmanager are done. Follow-ups: container log collection (Grafana Alloy), a notification receiver example (webhook / Slack), a sample instrumented app.
+- ~~Data platform~~ Done (`stacks/data-platform-postgres-dbt-prefect-metabase`). Follow-ups: a ClickHouse variant, Airflow instead of Prefect, Superset instead of Metabase, dbt docs served as a static site.
+- ~~RAG / LLM~~ Ollama + Open WebUI + Qdrant added (`stacks/rag-ollama-openwebui-qdrant`). Langfuse (`stacks/langfuse-postgres-clickhouse-s3`) and the pgvector variant are done. Follow-ups: wiring Open WebUI to Langfuse, a LiteLLM proxy in front of Ollama, a GPU CI runner.
 - **Streaming**: Kafka or Redpanda + Schema Registry + Kafka Connect + ClickHouse sink.
 - **Dev platform**: Gitea/Forgejo + Woodpecker + Harbor + Traefik.
 
 ### Testing improvements
-- Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for the LGTM and RAG stacks). Next candidates: log an MLflow run and read it back, produce/consume on Kafka (Kafka was done by hand), run a query on each database, ingest a trace into the APM server.
+- Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for all heavy projects; shared helpers in `scripts/smoke-lib.sh`). Next candidates: run a query on each plain database project, ingest a trace into the APM server, log in through Keycloak in the MLflow-OIDC stack.
 - A scheduled job that opens an issue when the weekly heavy run fails.
 - Resource budget per project in metadata (RAM/CPU) so the heavy workflow can pick the right runner and timeout.
 
@@ -122,12 +132,12 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 
 In rough order of value for effort:
 
-1. ~~**Move the MinIO users to a maintained store**~~ Done. Follow-up: decide when to delete `base/minio`, and use `include:` to share the `s3`/`create-bucket` definition instead of copying it into four projects.
-2. **GitLab**: generate the root password from `.env`, fix `external_url` / the published port, add a functional check (sign in through the API).
-3. **Functional tests for the heavy stacks**: MLflow (log a run and read it back), Kafka (produce/consume), Airflow (trigger an example DAG), Elasticsearch (index and search). Each one is a `smoke-test.sh`.
+1. ~~**Move the MinIO users to a maintained store**~~ Done. `base/minio` stays as a marked legacy project; the `s3`/`create-bucket` definition is shared through `extends` (`include:` cannot be customised per project).
+2. **GitLab**: generate the root password from `.env` and fix `external_url` / the published port (the functional check exists).
+3. ~~**Functional tests for the heavy stacks**~~ Done for every project in the heavy workflow.
 4. **Project template and README section check** (proposal 3), so new projects start consistent.
 5. ~~**Apache Superset or Metabase** as a BI service~~ Done (`base/superset`, `base/metabase`). Next: the data platform stack (database + dbt + scheduler + BI).
-6. **Alertmanager and span-metrics for the LGTM stack**, and Langfuse / a pgvector variant for the RAG stack.
+6. ~~**Alertmanager and span-metrics for the LGTM stack**, Langfuse and a pgvector variant for the RAG stack~~ Done.
 
 ## How to propose or pick up an item
 

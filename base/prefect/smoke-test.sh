@@ -15,6 +15,9 @@ pool_has_worker() {
     | py 'import json,sys; w=json.load(sys.stdin); sys.exit(0 if any(x["status"]=="ONLINE" for x in w) else 1)'
 }
 retry 120 "worker is online in work pool 'default'" pool_has_worker
-db=$(curl -fsS -m 30 "$API/admin/settings" | py 'import json,sys; print(json.load(sys.stdin)["server"]["database"]["connection_url"])') || fail "cannot read settings"
-case $db in *postgresql*) step "server uses PostgreSQL" ;; *) fail "server does not use PostgreSQL ($db)" ;; esac
+# the connection URL is masked by the settings API, so look at the database itself
+load_env
+rev=$(docker compose exec -T prefect_postgres psql -U "${POSTGRES_USER:-myuser}" -d "${POSTGRES_DB:-mydatabase}" -tAc "select version_num from alembic_version" 2>/dev/null | tr -d '[:space:]')
+[ -n "$rev" ] || fail "the Prefect schema is not in PostgreSQL (alembic_version is empty)"
+step "server uses PostgreSQL (schema revision $rev)"
 echo "Prefect functional smoke test passed"

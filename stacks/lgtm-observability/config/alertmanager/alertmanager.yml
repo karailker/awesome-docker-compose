@@ -1,0 +1,20 @@
+# Alertmanager routing. Every alert goes to the "default" receiver, which has no integrations (alerts
+# are only visible in the UI / API). Add a webhook, e-mail or Slack receiver here, for example:
+#
+#   receivers:
+#     - name: default
+#       webhook_configs:
+#         - url: http://my-service:8080/alerts
+route:
+  receiver: default
+  group_by: [alertname, service]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 4h
+  routes:
+    # the Watchdog is only a heartbeat
+    - receiver: default
+      matchers: [alertname = "Watchdog"]
+      repeat_interval: 1h
+receivers:
+  - name: default

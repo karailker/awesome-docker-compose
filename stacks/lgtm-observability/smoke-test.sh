@@ -11,6 +11,7 @@ TEMPO=http://localhost:${TEMPO_PORT:-3200}
 PROM=http://localhost:${PROMETHEUS_PORT:-9090}
 LOKI=http://localhost:${LOKI_PORT:-3100}
 GRAFANA=http://localhost:${GRAFANA_PORT:-3000}
+ALERTMANAGER=http://localhost:${ALERTMANAGER_PORT:-9093}
 GF_AUTH="${GF_ADMIN_USER:-admin}:${GF_ADMIN_PASSWORD:-admin}"
 
 fail() { echo "::error::lgtm smoke test: $*"; exit 1; }
@@ -45,7 +46,19 @@ retry 90 "metric smoke_test_gauge is queryable in Prometheus" prom_has smoke_tes
 loki_has() { curl -fsS -G "$LOKI/loki/api/v1/query_range" --data-urlencode 'query={service_name="smoke-test"} |= "smoke-log-line"' --data-urlencode "start=$((now - 300))000000000" | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin)["data"]["result"] else 1)'; }
 retry 90 "log line is queryable in Loki" loki_has
 
-for uid in prometheus loki tempo; do
+# Tempo's metrics generator turns the smoke span into span metrics (remote-written to Prometheus)
+retry 180 "span metrics for service smoke-test are in Prometheus" prom_has 'traces_spanmetrics_calls_total{service="smoke-test"}'
+
+# Alerting: Prometheus loaded the rules, talks to Alertmanager, and the always-firing Watchdog arrives there
+retry 60 "Alertmanager is ready" curl -fsS "$ALERTMANAGER/-/ready"
+rules_loaded() { curl -fsS "$PROM/api/v1/rules" | python3 -c 'import json,sys; g={x["name"] for x in json.load(sys.stdin)["data"]["groups"]}; sys.exit(0 if {"stack","traces"} <= g else 1)'; }
+retry 60 "Prometheus loaded the alert rules" rules_loaded
+am_connected() { curl -fsS "$PROM/api/v1/alertmanagers" | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin)["data"]["activeAlertmanagers"] else 1)'; }
+retry 60 "Prometheus is connected to Alertmanager" am_connected
+watchdog_arrived() { curl -fsS "$ALERTMANAGER/api/v2/alerts" | grep -q '"alertname":"Watchdog"'; }
+retry 120 "the Watchdog alert reaches Alertmanager" watchdog_arrived
+
+for uid in prometheus loki tempo alertmanager; do
   retry 60 "Grafana datasource $uid is healthy" bash -c "curl -fsS -u '$GF_AUTH' '$GRAFANA/api/datasources/uid/$uid/health' | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin)[\"status\"]==\"OK\" else 1)'"
 done
 retry 60 "Grafana dashboard 'LGTM overview' is provisioned" bash -c "curl -fsS -u '$GF_AUTH' '$GRAFANA/api/dashboards/uid/lgtm-overview' | grep -q 'LGTM overview'"

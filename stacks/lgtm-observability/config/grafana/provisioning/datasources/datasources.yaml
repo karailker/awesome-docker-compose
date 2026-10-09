@@ -34,3 +34,12 @@ datasources:
         query: '{service_name="$${__span.tags["service.name"]}"} | trace_id="$${__span.traceId}"'
       nodeGraph:
         enabled: true
+      serviceMap:
+        datasourceUid: prometheus
+  - name: Alertmanager
+    uid: alertmanager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
+    jsonData:
+      implementation: prometheus
