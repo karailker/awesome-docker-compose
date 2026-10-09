@@ -73,7 +73,10 @@ if [ $rc -ne 0 ]; then
   for c in $(docker compose ps -a -q); do
     echo "--- health of $(docker inspect -f '{{.Name}}' "$c"):"
     docker inspect -f '{{json .State.Health}}' "$c" | cut -c1-1500
+    docker inspect -f 'state: restarts={{.RestartCount}} oom_killed={{.State.OOMKilled}} exit_code={{.State.ExitCode}} started={{.State.StartedAt}}' "$c"
   done
+  echo "--- fatal / out-of-memory lines anywhere in the logs (last 40):"
+  docker compose logs --no-color 2>&1 | grep -E -i 'fatal|panic|out of memory|oom-kill|killed process|segfault' | tail -40 | cut -c1-300 || true
   docker compose logs --tail=100
 fi
 docker compose --profile '*' down -v --remove-orphans >/dev/null 2>&1
