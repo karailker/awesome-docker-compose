@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   smoke:
-    name: ${{ matrix.project }}
+    name: ${{ matrix.project }} ${{ matrix.variant }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -26,15 +26,29 @@ jobs:
           - base/apache-airflow
           - base/feast
           - base/gitlab
+          - base/superset
           - stacks/mlflow-minio-postgres-pgadmin
           - stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin
           - stacks/wandb-minio-postgres
           - stacks/rag-ollama-openwebui-qdrant
+        variant: [""]
+        include:
+          # object-store variants (compose.<variant>.yaml) of the projects that need S3
+          - { project: base/milvus, variant: seaweedfs }
+          - { project: base/milvus, variant: garage }
+          - { project: stacks/mlflow-minio-postgres-pgadmin, variant: seaweedfs }
+          - { project: stacks/mlflow-minio-postgres-pgadmin, variant: garage }
+          - { project: stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin, variant: seaweedfs }
+          - { project: stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin, variant: garage }
+          - { project: stacks/wandb-minio-postgres, variant: seaweedfs }
+          - { project: stacks/wandb-minio-postgres, variant: garage }
     steps:
       - uses: actions/checkout@v4
       - name: Raise vm.max_map_count (Elasticsearch / SonarQube)
         run: sudo sysctl -w vm.max_map_count=262144
       - run: scripts/smoke.sh "${{ matrix.project }}" 900
+        env:
+          SMOKE_VARIANT: ${{ matrix.variant }}
 
   image-pull:
     name: Pull all images (detect removed/renamed tags)

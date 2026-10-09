@@ -9,7 +9,7 @@ images=("$@")
 if [ ${#images[@]} -eq 0 ]; then
   mapfile -t images < <(for f in $(find base stacks -name compose.yaml | sort); do
     (cd "$(dirname "$f")" && docker compose --env-file /dev/null --profile '*' config --images 2>/dev/null)
-  done | sort -u | grep -v '^fastapi-example')
+  done | sort -u | grep -vE '^(fastapi-example|awesome-compose/)')
 fi
 echo "| Image | Critical | High | Fixable |"
 echo "|---|---:|---:|---:|"

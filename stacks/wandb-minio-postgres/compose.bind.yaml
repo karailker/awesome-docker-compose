@@ -1,6 +1,6 @@
 # Store the data in host directories instead of Docker-managed volumes.
 #
-#   mkdir -p ${DATA_DIR:-.}/wandb_data ${DATA_DIR:-.}/minio_data ${DATA_DIR:-.}/mysql_data
+#   mkdir -p ${DATA_DIR:-.}/wandb_data ${DATA_DIR:-.}/s3_data ${DATA_DIR:-.}/mysql_data
 #   docker compose -f compose.yaml -f compose.bind.yaml up -d
 #
 # DATA_DIR (default: this directory) can be set in .env or the environment.
@@ -11,12 +11,12 @@ volumes:
       type: none
       o: bind
       device: ${DATA_DIR:-.}/wandb_data
-  minio_data:
+  s3_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ${DATA_DIR:-.}/minio_data
+      device: ${DATA_DIR:-.}/s3_data
   mysql_data:
     driver: local
     driver_opts:

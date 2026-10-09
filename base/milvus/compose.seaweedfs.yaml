@@ -1,0 +1,17 @@
+# SeaweedFS instead of RustFS:  docker compose -f compose.yaml -f compose.seaweedfs.yaml up -d
+# (or COMPOSE_FILE=compose.yaml:compose.seaweedfs.yaml)
+services:
+  s3:
+    image: ${SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.48}
+    # SeaweedFS reads its admin identity from the standard AWS variables
+    environment: !override
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
+    command: server -dir=/data -master.volumeSizeLimitMB=1024 -ip=s3 -filer -s3 -s3.port=9000
+    ports: !override
+      - "9000:9000"   # S3 API
+      - "9333:9333"   # Master UI
+      - "8888:8888"   # Filer UI
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9333/cluster/healthz >/dev/null || exit 1"]
+      start_period: 15s

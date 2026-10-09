@@ -12,7 +12,7 @@ for f in "${files[@]}"; do
   while read -r img; do
     [ -z "$img" ] && continue
     # images built locally from a Dockerfile are not pulled
-    case "$img" in fastapi-example:*) continue ;; esac
+    case "$img" in fastapi-example:*|awesome-compose/*) continue ;; esac
     name=${img##*/}
     if [[ "$name" != *:* ]] || [[ "$name" == *:latest ]] || [[ "$name" == *-latest ]]; then
       if grep -qxE "$(printf '%s' "$img" | sed 's/[][\.*^$/]/\\&/g')[[:space:]]*(#.*)?" scripts/pin-exceptions.txt 2>/dev/null; then continue; fi
