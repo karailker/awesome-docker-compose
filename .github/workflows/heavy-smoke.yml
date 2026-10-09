@@ -31,6 +31,7 @@ jobs:
           - stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin
           - stacks/wandb-minio-postgres
           - stacks/rag-ollama-openwebui-qdrant
+          - stacks/data-platform-postgres-dbt-prefect-metabase
         variant: [""]
         include:
           # object-store variants (compose.<variant>.yaml) of the projects that need S3

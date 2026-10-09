@@ -1,0 +1,19 @@
+version: 2
+
+seeds:
+  - name: orders
+    columns:
+      - name: id
+        data_tests: [unique, not_null]
+
+models:
+  - name: stg_orders
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+  - name: revenue_by_country
+    columns:
+      - name: country
+        data_tests: [unique, not_null]
+      - name: revenue
+        data_tests: [not_null]
