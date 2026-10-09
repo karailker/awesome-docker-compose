@@ -13,7 +13,8 @@ retry 60 "Redis answers PING" r ping
 [ "$(r set smoke:k hello)" = OK ] || fail "SET failed"
 [ "$(r get smoke:k)" = hello ] || fail "GET returned another value"
 r del smoke:n smoke:list >/dev/null
-[ "$(r incr smoke:n)" = 1 ] && [ "$(r incrby smoke:n 4)" = 5 ] || fail "INCR / INCRBY failed"
+[ "$(r incr smoke:n)" = 1 ] || fail "INCR failed"
+[ "$(r incrby smoke:n 4)" = 5 ] || fail "INCRBY failed"
 r rpush smoke:list a b c >/dev/null
 [ "$(r lrange smoke:list 0 -1 | paste -sd, -)" = "a,b,c" ] || fail "list operations failed"
 r set smoke:ttl x ex 1 >/dev/null; sleep 2
