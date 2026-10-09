@@ -62,7 +62,7 @@ services:
       - langfuse
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://$$(hostname):3000/api/public/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://$$HOSTNAME:3000/api/public/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 20
