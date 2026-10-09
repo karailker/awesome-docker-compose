@@ -21,7 +21,7 @@ docker compose up -d
 ```
 
 1. Open <http://localhost:5000> and choose **Login with Keycloak**.
-2. Sign in with the demo user from `keycloak/realm-mlflow.json`: `admin@example.com` / `admin` (member of `mlflow-users`).
+2. Sign in with the demo user from `keycloak/realm-mlflow.json`: `admin@example.com` / `admin` (member of `mlflow-users`). The user has a first and last name on purpose: Keycloak 26 otherwise interrupts the very first login with a "Verify profile" form, and the login never reaches MLflow (found by `smoke-test.sh`). The realm is only imported into an empty `keycloak_data` volume, so after changing the file run `docker compose down -v` first.
 3. Keycloak admin console: <http://localhost:8081> (`admin` / `admin`).
 
 ## Configuration

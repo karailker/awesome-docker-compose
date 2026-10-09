@@ -9,6 +9,8 @@
     {
       "username": "admin@example.com",
       "email": "admin@example.com",
+      "firstName": "MLflow",
+      "lastName": "Admin",
       "emailVerified": true,
       "enabled": true,
       "credentials": [
