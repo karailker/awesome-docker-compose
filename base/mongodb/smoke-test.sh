@@ -17,8 +17,8 @@ out=$(authed smoke --eval '
   db.items.drop();
   db.items.insertMany([{k:"a",v:10},{k:"a",v:5},{k:"b",v:7}]);
   const r = db.items.aggregate([{$group:{_id:"$k",total:{$sum:"$v"}}},{$sort:{_id:1}}]).toArray();
-  print(r.map(x => x._id + "=" + x.total).join(","));
-  db.items.drop();') || fail "insert / aggregate failed"
+  print("RESULT:" + r.map(x => x._id + "=" + x.total).join(","));
+  db.items.drop();' | sed -n 's/^RESULT://p') || fail "insert / aggregate failed"
 [ "$out" = "a=15,b=7" ] || fail "aggregation returned '$out' instead of 'a=15,b=7'"
 step "documents inserted and aggregated ($out)"
 # --auth is on: an unauthenticated client must not be able to read
