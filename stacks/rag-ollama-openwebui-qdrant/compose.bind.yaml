@@ -1,6 +1,6 @@
 # Store the data in host directories instead of Docker-managed volumes.
 #
-#   mkdir -p ${DATA_DIR:-.}/ollama_data ${DATA_DIR:-.}/qdrant_data ${DATA_DIR:-.}/openwebui_data
+#   mkdir -p ${DATA_DIR:-.}/ollama_data ${DATA_DIR:-.}/qdrant_data ${DATA_DIR:-.}/pgvector_data ${DATA_DIR:-.}/openwebui_data
 #   docker compose -f compose.yaml -f compose.bind.yaml up -d
 #
 # DATA_DIR (default: this directory) can be set in .env or the environment.
@@ -23,3 +23,10 @@ volumes:
       type: none
       o: bind
       device: ${DATA_DIR:-.}/openwebui_data
+  # only used with compose.pgvector.yaml
+  pgvector_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/pgvector_data

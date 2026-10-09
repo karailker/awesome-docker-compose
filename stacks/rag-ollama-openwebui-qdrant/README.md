@@ -32,6 +32,16 @@ docker compose exec ollama ollama run llama3.2:1b
 curl http://localhost:11434/api/generate -d '{"model":"llama3.2:1b","prompt":"Hello","stream":false}'
 ```
 
+## Vector database variants
+
+Qdrant is the default. To store the vectors in PostgreSQL with the [pgvector](https://github.com/pgvector/pgvector) extension instead:
+
+```sh
+docker compose -f compose.yaml -f compose.pgvector.yaml up -d      # or COMPOSE_FILE=compose.yaml:compose.pgvector.yaml in .env
+```
+
+This adds a `pgvector` service (`pgvector/pgvector:pg17`, `POSTGRES_*` / `PGVECTOR_PORT`, volume `pgvector_data`), sets `VECTOR_DB=pgvector` for Open WebUI and moves Qdrant behind the `qdrant` profile so it does not start. Use one variant per `openwebui_data` volume: documents indexed with one variant are not visible with the other. `smoke-test.sh` runs against both (`SMOKE_VARIANT=pgvector`), checks the similarity search with SQL (`order by v <=> ...`) and that an uploaded document lands in the `document_chunk` table.
+
 ## Choosing models
 
 The defaults are small so that they run on a CPU-only laptop. Change them in `.env` and run `docker compose up -d` again (the job pulls what is missing). Browse <https://ollama.com/library> for models; bigger ones answer better but need more RAM:
@@ -66,11 +76,11 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 | `ENABLE_SIGNUP` | `true` | Allow new users to register; set to `false` after creating your account |
 | `BIND_ADDRESS` / `WEBUI_BIND_ADDRESS` | `127.0.0.1` | Interface for Ollama/Qdrant and for the UI; use `0.0.0.0` to expose them |
 | `WEBUI_PORT`, `OLLAMA_PORT`, `QDRANT_PORT` | `3000`, `11434`, `6333` | Host ports |
-| `OLLAMA_IMAGE`, `QDRANT_IMAGE`, `OPEN_WEBUI_IMAGE` | pinned versions | Override the images |
+| `OLLAMA_IMAGE`, `QDRANT_IMAGE`, `OPEN_WEBUI_IMAGE`, `PGVECTOR_IMAGE` | pinned versions | Override the images |
 
 ## Testing
 
-`smoke-test.sh` exercises the whole RAG path: the models are downloaded, Ollama returns embeddings and generates text, Qdrant returns the matching sentence for a question, Open WebUI lists the Ollama models, and a document uploaded to Open WebUI ends up as a new collection in Qdrant. Run it with `scripts/smoke.sh stacks/rag-ollama-openwebui-qdrant 900` (needs internet access to download the models; it is part of the weekly heavy workflow).
+`smoke-test.sh` exercises the whole RAG path: the models are downloaded, Ollama returns embeddings and generates text, Qdrant returns the matching sentence for a question, Open WebUI lists the Ollama models, and a document uploaded to Open WebUI ends up as a new collection in Qdrant. Run it with (add `SMOKE_VARIANT=pgvector` for the pgvector variant) `scripts/smoke.sh stacks/rag-ollama-openwebui-qdrant 900` (needs internet access to download the models; it is part of the weekly heavy workflow).
 
 ## Notes
 

@@ -14,6 +14,8 @@ WEBUI=http://localhost:${WEBUI_PORT:-3000}
 CHAT=${CHAT_MODEL:-llama3.2:1b}
 EMBED=${EMBED_MODEL:-nomic-embed-text}
 JSON='Content-Type: application/json'
+PGV=${SMOKE_VARIANT:-}   # "pgvector": Open WebUI stores its vectors in PostgreSQL instead of Qdrant
+psql_() { docker compose exec -T pgvector psql -U "${POSTGRES_USER:-openwebui}" -d "${POSTGRES_DB:-openwebui}" -tA "$@"; }
 
 fail() { echo "::error::rag smoke test: $*"; exit 1; }
 retry() {
@@ -28,7 +30,7 @@ retry() {
 py() { python3 -c "$@"; }
 
 retry 120 "Ollama answers" curl -fsS "$OLLAMA/api/version"
-retry 120 "Qdrant is ready" curl -fsS "$QDRANT/readyz"
+if [ "$PGV" = pgvector ]; then retry 120 "pgvector is ready" psql_ -c "select 1"; else retry 120 "Qdrant is ready" curl -fsS "$QDRANT/readyz"; fi
 
 has_models() {
   curl -fsS "$OLLAMA/api/tags" | py "
@@ -53,20 +55,34 @@ reply=$(curl -fsS -m 300 "$OLLAMA/api/generate" -H "$JSON" -d "{\"model\":\"$CHA
 [ -n "$reply" ] || fail "empty reply from $CHAT"
 echo "ok: $CHAT replies: $reply"
 
-# Qdrant: store both sentences, ask a question, the right sentence must come back first
-coll=smoke_rag
-curl -fsS -X DELETE "$QDRANT/collections/$coll" >/dev/null 2>&1 || true
-curl -fsS -X PUT "$QDRANT/collections/$coll" -H "$JSON" -d "{\"vectors\":{\"size\":$dim,\"distance\":\"Cosine\"}}" >/dev/null || fail "cannot create Qdrant collection"
-printf '%s' "$vectors" | py '
+if [ "$PGV" = pgvector ]; then
+  # pgvector: store both sentences, ask a question, the right sentence must come back first
+  psql_ -c "create extension if not exists vector; drop table if exists smoke_rag; create table smoke_rag (id int primary key, txt text, v vector($dim))" >/dev/null || fail "cannot create the pgvector table"
+  printf '%s' "$vectors" | py '
+import json, sys
+v = json.load(sys.stdin); t = json.loads(sys.argv[1])
+for i, txt in enumerate(t):
+    print("insert into smoke_rag values (%d, \x27%s\x27, \x27%s\x27);" % (i + 1, txt, json.dumps(v[i])))' "$docs" | psql_ >/dev/null || fail "cannot insert into pgvector"
+  question=$(embed '["What is the capital of France?"]' | py 'import json,sys; print(json.dumps(json.load(sys.stdin)[0]))') || fail "embedding of the question failed"
+  top=$(psql_ -c "select txt from smoke_rag order by v <=> '$question' limit 1") || fail "pgvector query failed"
+  case "$top" in *Paris*) echo "ok: pgvector returns the matching sentence: $top" ;; *) fail "wrong top hit: $top" ;; esac
+  psql_ -c "drop table smoke_rag" >/dev/null
+else
+  # Qdrant: store both sentences, ask a question, the right sentence must come back first
+  coll=smoke_rag
+  curl -fsS -X DELETE "$QDRANT/collections/$coll" >/dev/null 2>&1 || true
+  curl -fsS -X PUT "$QDRANT/collections/$coll" -H "$JSON" -d "{\"vectors\":{\"size\":$dim,\"distance\":\"Cosine\"}}" >/dev/null || fail "cannot create Qdrant collection"
+  printf '%s' "$vectors" | py '
 import json, sys
 v = json.load(sys.stdin); t = json.loads(sys.argv[1])
 print(json.dumps({"points": [{"id": i + 1, "vector": v[i], "payload": {"text": t[i]}} for i in range(len(t))]}))' "$docs" \
-  | curl -fsS -X PUT "$QDRANT/collections/$coll/points?wait=true" -H "$JSON" -d @- >/dev/null || fail "cannot upsert into Qdrant"
-question=$(embed '["What is the capital of France?"]' | py 'import json,sys; print(json.dumps(json.load(sys.stdin)[0]))') || fail "embedding of the question failed"
-top=$(curl -fsS -X POST "$QDRANT/collections/$coll/points/query" -H "$JSON" -d "{\"query\":$question,\"limit\":1,\"with_payload\":true}" \
-  | py 'import json,sys; print(json.load(sys.stdin)["result"]["points"][0]["payload"]["text"])') || fail "Qdrant query failed"
-case "$top" in *Paris*) echo "ok: Qdrant returns the matching sentence: $top" ;; *) fail "wrong top hit: $top" ;; esac
-curl -fsS -X DELETE "$QDRANT/collections/$coll" >/dev/null
+    | curl -fsS -X PUT "$QDRANT/collections/$coll/points?wait=true" -H "$JSON" -d @- >/dev/null || fail "cannot upsert into Qdrant"
+  question=$(embed '["What is the capital of France?"]' | py 'import json,sys; print(json.dumps(json.load(sys.stdin)[0]))') || fail "embedding of the question failed"
+  top=$(curl -fsS -X POST "$QDRANT/collections/$coll/points/query" -H "$JSON" -d "{\"query\":$question,\"limit\":1,\"with_payload\":true}" \
+    | py 'import json,sys; print(json.load(sys.stdin)["result"]["points"][0]["payload"]["text"])') || fail "Qdrant query failed"
+  case "$top" in *Paris*) echo "ok: Qdrant returns the matching sentence: $top" ;; *) fail "wrong top hit: $top" ;; esac
+  curl -fsS -X DELETE "$QDRANT/collections/$coll" >/dev/null
+fi
 
 # Open WebUI
 retry 600 "Open WebUI is healthy" curl -fsS "$WEBUI/health"
@@ -84,6 +100,7 @@ sys.exit(0 if any(n == sys.argv[1] or n.startswith(sys.argv[1] + ':') for n in n
 retry 120 "Open WebUI lists the Ollama model $CHAT" webui_sees_models
 
 count_webui_collections() {
+  if [ "$PGV" = pgvector ]; then psql_ -c "select count(*) from document_chunk" 2>/dev/null || echo 0; return; fi
   curl -fsS "$QDRANT/collections" | py 'import json,sys; print(len([c for c in json.load(sys.stdin)["result"]["collections"] if c["name"].startswith("open-webui")]))'
 }
 before=$(count_webui_collections)
