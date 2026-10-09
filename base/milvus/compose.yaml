@@ -19,55 +19,23 @@ services:
       retries: 3
 
   s3:
-    # S3-compatible object store. Default: RustFS. Switch with an override file:
-    #   -f compose.yaml -f compose.seaweedfs.yaml   or   -f compose.yaml -f compose.garage.yaml
-    # Whatever the variant, the S3 API is http://s3:9000 inside the network and on localhost:9000.
-    image: ${RUSTFS_IMAGE:-rustfs/rustfs:1.0.1}
+    # S3-compatible object store (RustFS by default; compose.seaweedfs.yaml / compose.garage.yaml switch it).
+    # Defined once in shared/s3/compose.yaml. The S3 API is http://s3:9000 for every variant.
+    extends:
+      file: ../../shared/s3/compose.yaml
+      service: s3
     container_name: milvus-s3
-    ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # RustFS console
-    environment:
-      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
-      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
-      RUSTFS_VOLUMES: /data
-      RUSTFS_ADDRESS: ":9000"
-      RUSTFS_CONSOLE_ENABLE: "true"
-      RUSTFS_CONSOLE_ADDRESS: ":9001"
-    volumes:
-      - s3_data:/data
     networks:
       - milvus_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:9000/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
 
   create-bucket:
-    # One-shot job: creates the bucket(s) in S3_BUCKETS (space separated) if they do not exist yet.
-    image: ${AWSCLI_IMAGE:-amazon/aws-cli:2.37.11}
-    depends_on:
-      s3:
-        condition: service_healthy
+    extends:
+      file: ../../shared/s3/compose.yaml
+      service: create-bucket
     environment:
-      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-GKdeadbeefdeadbeefdeadbeef}
-      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef}
-      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
       S3_BUCKETS: ${S3_BUCKET:-a-bucket}
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        for b in $$S3_BUCKETS; do
-          until aws --endpoint-url http://s3:9000 s3api head-bucket --bucket "$$b" 2>/dev/null \
-             || aws --endpoint-url http://s3:9000 s3 mb "s3://$$b"; do sleep 2; done
-          echo "bucket $$b is ready"
-        done
     networks:
       - milvus_network
-    restart: "no"
 
   standalone:
     image: milvusdb/milvus:v2.5.7

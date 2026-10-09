@@ -9,7 +9,26 @@ Building blocks for projects that need an S3-compatible object store. They exist
 
 ## The pattern
 
-`compose.yaml` defines `s3` (RustFS) and a `create-bucket` job (`amazon/aws-cli`: `head-bucket || mb`) that the apps depend on. `compose.seaweedfs.yaml` and `compose.garage.yaml` override the image, environment, ports, volumes and healthcheck of `s3`; the Garage one adds `garage-init` and makes `create-bucket` wait for it. The S3 API is always `http://s3:9000` in the network, so applications are identical across variants. Overrides use `!override` / `!reset` and need Docker Compose 2.24 or newer.
+`shared/s3/compose.yaml` holds service templates: `s3` (RustFS), `create-bucket` (`amazon/aws-cli`: `head-bucket || mb`) and `garage-init`. A project pulls them in with `extends` and adds what is project specific (network, bucket names):
+
+```yaml
+services:
+  s3:
+    extends: {file: ../../shared/s3/compose.yaml, service: s3}
+    networks: [my-network]
+  create-bucket:
+    extends: {file: ../../shared/s3/compose.yaml, service: create-bucket}
+    environment:
+      S3_BUCKETS: my-bucket   # space separated
+    networks: [my-network]
+volumes:
+  s3_data:
+    name: ${VOLUME_PREFIX:-my-project}_s3_data
+```
+
+and makes the apps `depends_on: create-bucket: {condition: service_completed_successfully}`. `compose.seaweedfs.yaml` and `compose.garage.yaml` override the image, environment, ports, volumes and healthcheck of `s3`; the Garage one adds `garage-init` (also from the template) and makes `create-bucket` wait for it. The S3 API is always `http://s3:9000` in the network, so applications are identical across variants. Overrides use `!override` / `!reset` and need Docker Compose 2.24 or newer.
+
+**Why `extends` and not `include:`?** `include` cannot be customised by the including file (a service defined in both files is a conflict), so the project-specific parts - the network, the bucket list and its default - cannot be set. It would also force every project onto the default network and make `.env` mandatory for the defaults. `extends` shares the same definitions and lets each project add its own bits.
 
 ## Garage specifics
 
