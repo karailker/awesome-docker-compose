@@ -1,22 +1,17 @@
 services:
   postgres:
-    image: postgres:17
+    extends:
+      file: ../../shared/postgres/compose.yaml
+      service: postgres
     container_name: metabase-postgres
     environment:
       POSTGRES_DB: ${METABASE_DB:-metabase}
       POSTGRES_USER: ${POSTGRES_USER:-metabase}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-metabase}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d:ro # creates the sample "analytics" database on first start
     networks:
       - metabase_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-metabase} -d ${METABASE_DB:-metabase}"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
 
   metabase:
     image: ${METABASE_IMAGE:-metabase/metabase:v0.64.1.3}

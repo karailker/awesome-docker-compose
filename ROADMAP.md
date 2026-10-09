@@ -53,7 +53,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 - LGTM observability stack (Loki, Grafana, Tempo, Prometheus, OpenTelemetry Collector) with a functional round-trip test, plus Tempo span metrics / service graph and Alertmanager with sample alert rules
 - Data platform stack (PostgreSQL, dbt, Prefect, Metabase), Langfuse stack, pgvector variant of the RAG stack
 - Functional `smoke-test.sh` for every project that is part of the heavy workflow (helpers in `scripts/smoke-lib.sh`)
-- `s3` / `create-bucket` / `garage-init` defined once in `shared/s3/compose.yaml` and reused with `extends`
+- `s3` / `create-bucket` / `garage-init` defined once in `shared/s3/compose.yaml`, `postgres` / `pgadmin` in `shared/postgres/compose.yaml`, both reused with `extends`
 - Local RAG stack (Ollama, Open WebUI, Qdrant) with a functional test from model download to a document landing in Qdrant
 - Named volumes with `compose.bind.yaml`, pinned image versions with Renovate, security scans, Makefile, contributor checklist and PR template
 - CI: static checks, smoke tests, S3 compatibility tests, weekly heavy tests
@@ -103,7 +103,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 5. ~~Security scanning~~ Done: gitleaks (full history, baseline for old findings), Trivy for secrets and Dockerfile misconfiguration, a compose policy check, and a weekly image/dependency vulnerability report. The scans already found two real problems (see known issues 8 and 9).
 6. ~~Helper entrypoint~~ Done: `Makefile` (`make help`).
 7. **Generated project index** in the root README (from a small metadata file per project) so the list cannot drift from the directory tree.
-8. **Sharing definitions.** The S3 services are shared through `extends` (`shared/s3/compose.yaml`). Postgres, pgAdmin and Redis definitions are still copied between stacks; the same approach could be used for them.
+8. ~~**Sharing definitions.**~~ Done: the S3 services (`shared/s3/`) and the PostgreSQL / pgAdmin templates (`shared/postgres/`) are shared through `extends`. Redis/Valkey stays per project because the images and options differ (see `shared/postgres/README.md`).
 
 ### New base services
 | Area | Candidates | Notes |

@@ -14,23 +14,18 @@ x-superset: &superset
 
 services:
   postgres:
-    image: postgres:17
+    extends:
+      file: ../../shared/postgres/compose.yaml
+      service: postgres
     container_name: superset-postgres
     environment:
       POSTGRES_DB: ${SUPERSET_DB:-superset}
       POSTGRES_USER: ${POSTGRES_USER:-superset}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-superset}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d:ro # creates the sample "analytics" database on first start
     networks:
       - superset_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-superset} -d ${SUPERSET_DB:-superset}"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
 
   redis:
     image: valkey/valkey:9.1.2

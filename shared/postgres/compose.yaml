@@ -1,0 +1,34 @@
+# Service templates for PostgreSQL and pgAdmin, shared by the stacks that need a plain database.
+# Use them with `extends` and add what is project specific (container name, POSTGRES_* variables,
+# extra volumes such as an initdb directory, network):
+#
+#   postgres:
+#     extends: {file: ../../shared/postgres/compose.yaml, service: postgres}
+#     environment:
+#       POSTGRES_DB: ${POSTGRES_DB:-mydb}
+#       POSTGRES_USER: ${POSTGRES_USER:-myuser}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypassword}
+#     networks: [my-network]
+#
+# The project declares the `postgres_data` volume and the networks (see shared/postgres/README.md).
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:17}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      # $$ : evaluated inside the container, so the project only has to set the POSTGRES_* variables
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  pgadmin:
+    image: ${PGADMIN_IMAGE:-elestio/pgadmin:REL-9_18}
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-adminpassword}
+    ports:
+      - "${PGADMIN_PORT:-5433}:80"
+    restart: unless-stopped
