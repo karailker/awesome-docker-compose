@@ -33,6 +33,10 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 - Provisioning lives in `grafana/provisioning/` (data source and dashboards); scrape targets in `prometheus/prometheus.yml`.
 - Sign-up is disabled.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/grafana`) checks that Grafana and Prometheus are healthy, Prometheus scrapes itself, every provisioned data source is healthy and a query through Grafana reaches Prometheus.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

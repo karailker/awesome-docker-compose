@@ -8,25 +8,41 @@ GitLab Community Edition with external PostgreSQL and Redis.
 
 | Service | Image | Port(s) | Purpose |
 |---|---|---|---|
-| `gitlab` | `gitlab/gitlab-ce:19.4.1-ce.0` | 8090 (HTTP), 8093 (HTTPS), 2222 (SSH) | GitLab |
+| `gitlab` | `gitlab/gitlab-ce:19.4.1-ce.0` | 8090 (HTTP, `GITLAB_HTTP_PORT`), 8093 (HTTPS, unused), 2222 (SSH, `GITLAB_SSH_PORT`) | GitLab |
 | `postgresql` | `postgres:17` | internal | Database |
 | `redis` | `redis:7` | internal | Cache and queues |
 
 ## Quick start
 
 ```sh
+cp .env.example .env     # set GITLAB_ROOT_PASSWORD first (openssl rand -base64 18)
 docker compose up -d
 docker compose logs -f gitlab      # wait for "gitlab Reconfigured!" / healthy
 ```
 
 - UI: <http://localhost:8090>
-- Login: `root` / `S3cureP@ssw0rd_2025` (set in `compose.yaml` via `GITLAB_ROOT_PASSWORD`)
+- Login: `root` / the value of `GITLAB_ROOT_PASSWORD` in `.env` (default `S3cureP@ssw0rd_2025`; only applied when GitLab initialises an empty database, so change it in the UI afterwards)
 - Git over SSH: port `2222`
+
+## Configuration
+
+| Variable | Default | Description |
+|---|---|---|
+| `GITLAB_ROOT_PASSWORD` / `GITLAB_ROOT_EMAIL` | see `.env.example` | Root account, applied on the first start only |
+| `GITLAB_DB_PASSWORD` | `gitlab` | Password of the external PostgreSQL database (read by both containers) |
+| `GITLAB_HTTP_PORT` | `8090` | Host port of the web UI |
+| `GITLAB_EXTERNAL_URL` | `http://localhost:8090` | URL users open; clone URLs and redirects use it. It must match the published port, so change both together (or put a real host name here when GitLab is behind a proxy) |
+| `GITLAB_SSH_PORT` | `2222` | Host port of Git over SSH (also shown in SSH clone URLs) |
+
+nginx listens on port 80 inside the container (`nginx['listen_port'] = 80`) while `external_url` carries the host port, so no hosts-file entry is needed any more. Port 8093 is published for HTTPS but only does something when you configure HTTPS in Omnibus.
+
+## Testing
+
+`smoke-test.sh` (heavy workflow) waits for the sign-in page, checks that it is served directly at the published port, creates an admin API token inside the container, checks that the root account's password is the one from `GITLAB_ROOT_PASSWORD` (and a wrong one is not), creates a project through the API and checks that its clone URL starts with `GITLAB_EXTERNAL_URL`.
 
 ## Notes
 
-- The hostname is `gitlab.local` and `external_url` is `http://gitlab.local`; add `127.0.0.1 gitlab.local` to your hosts file for clone URLs to resolve.
-- Credentials are hard-coded in `compose.yaml`: change them before real use.
+- Development defaults only: change `GITLAB_ROOT_PASSWORD` and `GITLAB_DB_PASSWORD` before real use.
 
 ## Data and volumes
 

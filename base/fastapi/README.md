@@ -38,6 +38,10 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 - Application code is in `app/` with pinned dependencies in `app/requirements.txt`.
 - Replace `app/` with your own project to reuse the setup.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/fastapi`) exercises `/health`, `/`, `/items/{id}` (including the 400 and 422 error cases), `POST /echo` and checks that the application writes its log file.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

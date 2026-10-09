@@ -40,6 +40,10 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 - MySQL 8.4 is the current LTS release; the admin UIs are pinned as well.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/mysql`) creates a table as the application user, inserts rows and aggregates them.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

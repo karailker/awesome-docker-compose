@@ -23,6 +23,10 @@ docker compose exec valkey valkey-cli ping
 - No password is configured: do not expose port 6379 beyond localhost.
 - Data is persisted in a volume mounted at `/data`.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/valkey`) runs string, counter, list and key-expiry commands through `valkey-cli`.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

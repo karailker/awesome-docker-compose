@@ -24,6 +24,10 @@ docker compose --profile redis-insight up -d
 - No password is configured: do not expose port 6379 beyond localhost.
 - Image versions are pinned. Redis 8 is licensed under the RSALv2/SSPLv1/AGPLv3 triple license; for a permissively licensed drop-in see [Valkey](../valkey/).
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/redis`) runs string, counter, list and key-expiry commands through `redis-cli`.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

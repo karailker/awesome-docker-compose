@@ -8,7 +8,7 @@ services:
     command: ["postgres", "-c", "max_locks_per_transaction=256"]
     environment:
       POSTGRES_USER: gitlab
-      POSTGRES_PASSWORD: gitlab
+      POSTGRES_PASSWORD: ${GITLAB_DB_PASSWORD:-gitlab}
       POSTGRES_DB: gitlabhq_production
     volumes:
       - postgresql_data:/var/lib/postgresql/data
@@ -42,11 +42,15 @@ services:
     hostname: gitlab.local
     shm_size: 256m   # GitLab's recommendation for Omnibus
     environment:
-      GITLAB_ROOT_PASSWORD: S3cureP@ssw0rd_2025
-      GITLAB_ROOT_EMAIL: admin@example.com
+      # only applied when GitLab initialises an empty database (first start)
+      GITLAB_ROOT_PASSWORD: ${GITLAB_ROOT_PASSWORD:-S3cureP@ssw0rd_2025}
+      GITLAB_ROOT_EMAIL: ${GITLAB_ROOT_EMAIL:-admin@example.com}
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab.local'
-        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        # the URL users open (and that clone URLs / redirects use); nginx still listens on 80 inside the container
+        external_url '${GITLAB_EXTERNAL_URL:-http://localhost:8090}'
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        gitlab_rails['gitlab_shell_ssh_port'] = ${GITLAB_SSH_PORT:-2222}
 
         # --- External PostgreSQL ---
         gitlab_rails['db_adapter'] = 'postgresql'
@@ -54,7 +58,7 @@ services:
         gitlab_rails['db_host'] = 'gitlab_postgresql'
         gitlab_rails['db_port'] = 5432
         gitlab_rails['db_username'] = 'gitlab'
-        gitlab_rails['db_password'] = 'gitlab'
+        gitlab_rails['db_password'] = '${GITLAB_DB_PASSWORD:-gitlab}'
         gitlab_rails['db_database'] = 'gitlabhq_production'
 
         # --- External Redis ---
@@ -69,15 +73,13 @@ services:
         # Optional: set timezone
         # gitlab_rails['time_zone'] = 'Europe/Istanbul'
     ports:
-      - "8090:80"
+      - "${GITLAB_HTTP_PORT:-8090}:80"
       - "8093:443"     # enable only when HTTPS is configured in Omnibus
-      - "2222:22"
+      - "${GITLAB_SSH_PORT:-2222}:22"
     volumes:
       - gitlab_config:/etc/gitlab
       - gitlab_logs:/var/log/gitlab
       - gitlab_data:/var/opt/gitlab
-    extra_hosts:
-      - "gitlab.local:127.0.0.1"   # so your host can resolve http://gitlab.local
     depends_on:
       postgresql:
         condition: service_healthy

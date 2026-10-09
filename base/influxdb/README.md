@@ -38,6 +38,10 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 - Telegraf is configured in `telegraf/telegraf.conf` and writes to the bucket above.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/influxdb`) writes a point with the line protocol, reads it back with Flux and checks that a wrong token gets HTTP 401.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

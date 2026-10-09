@@ -37,6 +37,10 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 - Keep the Mongo Express credentials in sync with the root credentials.
 - Source: <https://hub.docker.com/_/mongo>
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/mongodb`) authenticates as root, inserts documents and aggregates them, and checks that an unauthenticated client is refused.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

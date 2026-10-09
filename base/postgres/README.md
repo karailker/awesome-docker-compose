@@ -36,6 +36,10 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 - Port 5432 is **not** published to the host. Other containers reach it as `postgres:5432`; to connect from the host add `ports: ["5432:5432"]` to the service.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/postgres`) creates a table, inserts rows and aggregates them, and checks that a network login needs the right password (the image trusts loopback connections inside the container, so the check goes through the service name).
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
