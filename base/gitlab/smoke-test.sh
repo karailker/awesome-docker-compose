@@ -10,7 +10,10 @@ export NAME="gitlab smoke test"
 BASE=http://localhost:8090
 PW=$(sed -n 's/^ *GITLAB_ROOT_PASSWORD: *//p' compose.yaml | head -n1)
 
-retry 900 "GitLab is ready" curl -fsS "$BASE/-/readiness"
+# /-/readiness is limited to the monitoring IP allowlist (requests via the published port are rejected),
+# so wait for the sign-in page instead (200, or a redirect to the configured external_url)
+sign_in_page() { code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/users/sign_in"); [ "$code" = 200 ] || [ "$code" = 302 ]; }
+retry 900 "GitLab answers (sign-in page)" sign_in_page
 token=$(curl -fsS -m 60 "$BASE/oauth/token" -d grant_type=password -d username=root --data-urlencode "password=$PW" \
   | py 'import json,sys; print(json.load(sys.stdin)["access_token"])') || fail "cannot sign in as root"
 step "root signed in"
