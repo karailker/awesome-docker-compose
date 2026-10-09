@@ -75,7 +75,7 @@ Data is kept in Docker-managed named volumes, so nothing has to be created befor
 - First start installs `mlflow-oidc-auth` with pip, so MLflow takes a minute to become available.
 - `OAUTHLIB_INSECURE_TRANSPORT=1` and debug logging are for local development only.
 - The start command installs `psycopg2-binary` and `boto3` (neither is in the MLflow image; boto3 is required for the S3 artifact store) and uses the explicit `postgresql+psycopg2://` URI (SQLAlchemy 2.1 would otherwise pick the psycopg 3 driver).
-- `smoke-test.sh` (run by CI) checks that MLflow answers and that the `mlflow` bucket accepts a write, read and delete, for every variant.
+- `smoke-test.sh` (run by CI) signs in through Keycloak the way a browser does (`/login` -> Keycloak login form -> `/callback`), checks that the tracking API refuses anonymous requests and accepts the OIDC session, and that the `mlflow` bucket accepts a write, read and delete, for every variant.
 - Replace all default passwords and secrets, and put the stack behind TLS, before any real use.
 
 ### Migrating from the MinIO version of this project
