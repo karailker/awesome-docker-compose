@@ -63,6 +63,8 @@ services:
         until curl -s --cacert config/certs/ca/ca.crt https://es01:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
         until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD:-elasticpassword}" -H "Content-Type: application/json" https://es01:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD:-kibanasystempassword}\"}" | grep -q "^{}"; do sleep 10; done;
+        echo "Setting the elastic password in the security index (the bootstrap password only works on es01)";
+        until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD:-elasticpassword}" -H "Content-Type: application/json" https://es01:9200/_security/user/elastic/_password -d "{\"password\":\"${ELASTIC_PASSWORD:-elasticpassword}\"}" | grep -q "^{}"; do sleep 10; done;
         echo "All done!";
       '
     healthcheck:
