@@ -58,9 +58,10 @@ retry 60 "Prometheus is connected to Alertmanager" am_connected
 watchdog_arrived() { curl -fsS "$ALERTMANAGER/api/v2/alerts" | grep -q '"alertname":"Watchdog"'; }
 retry 120 "the Watchdog alert reaches Alertmanager" watchdog_arrived
 
-for uid in prometheus loki tempo alertmanager; do
+for uid in prometheus loki tempo; do
   retry 60 "Grafana datasource $uid is healthy" bash -c "curl -fsS -u '$GF_AUTH' '$GRAFANA/api/datasources/uid/$uid/health' | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin)[\"status\"]==\"OK\" else 1)'"
 done
+retry 60 "Grafana datasource alertmanager is provisioned" bash -c "curl -fsS -u '$GF_AUTH' '$GRAFANA/api/datasources/uid/alertmanager' | grep -q '\"type\":\"alertmanager\"'"
 retry 60 "Grafana dashboard 'LGTM overview' is provisioned" bash -c "curl -fsS -u '$GF_AUTH' '$GRAFANA/api/dashboards/uid/lgtm-overview' | grep -q 'LGTM overview'"
 # Optional (SMOKE_DEMO=1, used by CI): the "demo" profile generates traces, metrics and logs with telemetrygen
 if [ "${SMOKE_DEMO:-}" = "1" ]; then

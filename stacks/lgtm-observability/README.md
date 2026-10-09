@@ -70,7 +70,7 @@ Component configuration lives in `config/` (collector pipelines, Tempo, Loki, Pr
 
 ## Testing
 
-`smoke-test.sh` sends a trace, a metric and a log line through the collector and reads each one back from Tempo, Prometheus and Loki, checks that Tempo produced span metrics for the trace, that Prometheus loaded the alert rules and the always-firing Watchdog reached Alertmanager, then checks the four Grafana data sources and the dashboard. `scripts/smoke.sh stacks/lgtm-observability` runs it (so does CI, including the `demo` profile).
+`smoke-test.sh` sends a trace, a metric and a log line through the collector and reads each one back from Tempo, Prometheus and Loki, checks that Tempo produced span metrics for the trace, that Prometheus loaded the alert rules and the always-firing Watchdog reached Alertmanager, then checks the Grafana data sources (health of Prometheus, Loki and Tempo; the Alertmanager one is only checked for being provisioned) and the dashboard. `scripts/smoke.sh stacks/lgtm-observability` runs it (so does CI, including the `demo` profile).
 
 ## Notes
 
