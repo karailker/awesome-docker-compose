@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Functional test: cluster health, index a document, search it, Kibana status, and an APM transaction
-# sent to the APM server that must show up in Elasticsearch (traces-apm* data stream).
+# Functional test: cluster health, index a document, search it, Kibana status, and APM ingestion: an Elastic APM
+# transaction (intake API) and an OpenTelemetry span (OTLP/HTTP) sent to the APM server must show up in
+# Elasticsearch (traces-apm* data stream).
 set -uo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$here" || exit 1
@@ -53,5 +54,17 @@ apm_diagnostics() {  # printed when the test fails after the APM step has starte
 }
 trap apm_diagnostics EXIT
 retry 180 "the transaction is stored in Elasticsearch (traces-apm*)" apm_stored
+
+# OpenTelemetry: send a span as OTLP/HTTP (JSON) to the APM server's OTLP endpoint and find it by trace id
+otid=$(openssl rand -hex 16); osid=$(openssl rand -hex 8)
+ostart=$(($(date +%s) * 1000000000)); oend=$((ostart + 25000000))
+span="{\"resourceSpans\":[{\"resource\":{\"attributes\":[{\"key\":\"service.name\",\"value\":{\"stringValue\":\"smoke-otel-service\"}}]},\"scopeSpans\":[{\"scope\":{\"name\":\"smoke\"},\"spans\":[{\"traceId\":\"$otid\",\"spanId\":\"$osid\",\"name\":\"smoke-otel-span\",\"kind\":2,\"startTimeUnixNano\":\"$ostart\",\"endTimeUnixNano\":\"$oend\",\"status\":{\"code\":1}}]}]}]}"
+code=$(curl -sS -m 30 -o /tmp/apm-otlp.out -w '%{http_code}' -H "$JSON" -d "$span" "$APM/v1/traces") || fail "OTLP request to the APM server failed"
+case $code in 2??) step "OTLP span $osid (trace $otid) accepted by the APM server (HTTP $code)" ;; *) fail "APM OTLP endpoint answered HTTP $code: $(head -c 400 /tmp/apm-otlp.out)" ;; esac
+otel_stored() {
+  es "https://localhost:9200/traces-apm*/_search" -d "{\"query\":{\"term\":{\"trace.id\":\"$otid\"}}}" \
+    | py 'import json,sys; sys.exit(0 if json.load(sys.stdin)["hits"]["total"]["value"] >= 1 else 1)'
+}
+retry 180 "the OpenTelemetry span is stored in Elasticsearch (traces-apm*)" otel_stored
 trap - EXIT
 echo "Elasticsearch functional smoke test passed"

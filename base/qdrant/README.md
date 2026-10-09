@@ -21,6 +21,10 @@ docker compose up -d
 
 - Configuration is read from `config/production.yaml` (mounted read-only). To enable API-key authentication add `service.api_key` there.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/qdrant`) creates a collection, upserts points, runs a similarity search and a payload-filtered search.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

@@ -45,6 +45,10 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 - Run `CREATE EXTENSION vector;` once per database.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/pgvector`) enables the `vector` extension, stores embeddings with an HNSW index and checks the nearest-neighbour query.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

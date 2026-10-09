@@ -36,6 +36,10 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 - `--insecure` disables TLS and authentication, so users have no passwords: development only. The database is created on first start by the image (`COCKROACH_DATABASE`); the `init` profile additionally creates the user.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/cockroachdb`) runs the `init` job, creates a table in the application database and writes and reads rows in a transaction.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.

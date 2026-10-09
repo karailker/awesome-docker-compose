@@ -22,7 +22,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 
 | Project | State | Verified by | Notes |
 |---------|-------|-------------|-------|
-| `base/postgres`, `pgvector`, `mysql`, `mongodb`, `redis`, `valkey`, `rabbitmq`, `qdrant`, `grafana`, `influxdb`, `clickhouse`, `cockroachdb`, `fastapi` | ✅ | PR smoke | |
+| `base/postgres`, `pgvector`, `mysql`, `mongodb`, `redis`, `valkey`, `rabbitmq`, `qdrant`, `grafana`, `influxdb`, `clickhouse`, `cockroachdb`, `fastapi` | ✅ | PR smoke + functional test | each project runs real queries / requests (create, write, read, aggregate or search, plus authentication checks where the service has them) |
 | `base/kafka` | ✅ | PR smoke + functional test | topic created, 3 messages produced and consumed |
 | `base/rustfs`, `seaweedfs`, `garage` | ✅ | PR smoke + S3 round trip | maintained S3 stores |
 | `base/minio` | 🟡 legacy | PR smoke (starts) | MinIO Community Edition is unmaintained; Chainguard image is rebuilt from frozen source |
@@ -40,9 +40,9 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke x3 object stores + functional test | UI answers and the bucket is writable; real use of W&B Local may need a license/account |
 | `base/metabase` | ✅ | PR smoke + functional test | setup via API, sample database added, native SQL query |
 | `base/superset` | ✅ | heavy smoke + functional test | API login, sample database registered, SQL Lab query; the image is built locally to add the PostgreSQL driver |
-| `base/elasticsearch` | ✅ | heavy smoke + functional test | 3 nodes green, document indexed and searched, Kibana available, an APM transaction sent to the APM server is found in `traces-apm*`; the test found that the APM server ignored its settings (they were environment variables named like config keys) and then could not read the CA certificate (run as group 0 now) |
+| `base/elasticsearch` | ✅ | heavy smoke + functional test | 3 nodes green, document indexed and searched, Kibana available, an APM transaction and an OpenTelemetry span (OTLP/HTTP) sent to the APM server are found in `traces-apm*`; the test found that the APM server ignored its settings (they were environment variables named like config keys) and then could not read the CA certificate (run as group 0 now) |
 | `base/milvus` | ✅ | heavy smoke x3 object stores + functional test | collection, insert and similarity search via REST |
-| `base/gitlab` | ✅ | heavy smoke + functional test | sign-in page answers, an admin API token is created in the container and a project is created through the API (the test found that GitLab's migrations failed with `out of shared memory` until PostgreSQL got `max_locks_per_transaction=256`); needs about 4 GB RAM; credentials are hard-coded and `external_url` does not match the published port |
+| `base/gitlab` | ✅ | heavy smoke + functional test | sign-in page served at the published port, admin API token created in the container, root password checked against `GITLAB_ROOT_PASSWORD`, project created and its clone URL uses `GITLAB_EXTERNAL_URL` (the tests found that GitLab's migrations failed with `out of shared memory` until PostgreSQL got `max_locks_per_transaction=256`); needs about 4 GB RAM |
 
 ## Roadmap items
 
@@ -83,7 +83,7 @@ Ordered by user impact.
 3. ~~**MinIO is unmaintained.**~~ Migrated: Milvus, both MLflow stacks and W&B run on RustFS, SeaweedFS or Garage (see `shared/s3/`). Only the clearly marked legacy `base/minio` still uses the Chainguard MinIO build.
 4. **Chainguard images run as non-root (uid 65532).** Only `base/minio` is left on one; its `minio-init-perms` service fixes the volume ownership (found by the heavy run: Milvus' MinIO crashed with `file access denied`).
 5. **Insecure defaults.** (partly addressed: see the security checks below) Default passwords and tokens are documented everywhere, but nothing stops them from being published. CockroachDB runs `--insecure`.
-6. **GitLab URL.** `external_url` is `http://gitlab.local` while the web UI is published on `8090`.
+6. ~~**GitLab URL and root password.**~~ Fixed: `GITLAB_EXTERNAL_URL` / `GITLAB_HTTP_PORT` and `GITLAB_ROOT_PASSWORD` / `GITLAB_DB_PASSWORD` come from `.env`, nginx listens on 80 inside the container, and the test checks all of it.
 7. **Healthchecks and start order.** Several images do not ship the tool the healthcheck needs (found: `wget` missing in CockroachDB, Nexus and FastAPI images). New healthchecks must be verified in CI, which `scripts/smoke.sh` now does. The same check found services that crash when started before their dependency is ready (Prefect worker), so dependencies should use `condition: service_healthy`.
 
 ## Security findings fixed
@@ -124,7 +124,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 - **Dev platform**: Gitea/Forgejo + Woodpecker + Harbor + Traefik.
 
 ### Testing improvements
-- Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for all heavy projects; shared helpers in `scripts/smoke-lib.sh`). Next candidates: run a query on each plain database project, ingest spans through an OpenTelemetry exporter into the APM server.
+- Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for all heavy projects; shared helpers in `scripts/smoke-lib.sh`). Every project that runs in CI now has one.
 - A scheduled job that opens an issue when the weekly heavy run fails.
 - Resource budget per project in metadata (RAM/CPU) so the heavy workflow can pick the right runner and timeout.
 
@@ -133,7 +133,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 In rough order of value for effort:
 
 1. ~~**Move the MinIO users to a maintained store**~~ Done. `base/minio` stays as a marked legacy project; the `s3`/`create-bucket` definition is shared through `extends` (`include:` cannot be customised per project).
-2. **GitLab**: generate the root password from `.env` and fix `external_url` / the published port (the functional check exists).
+2. ~~**GitLab**: root password from `.env`, `external_url` / published port~~ Done.
 3. ~~**Functional tests for the heavy stacks**~~ Done for every project in the heavy workflow.
 4. **Project template and README section check** (proposal 3), so new projects start consistent.
 5. ~~**Apache Superset or Metabase** as a BI service~~ Done (`base/superset`, `base/metabase`). Next: the data platform stack (database + dbt + scheduler + BI).

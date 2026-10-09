@@ -2,7 +2,7 @@
 
 Three-node Elasticsearch 8 cluster with TLS, Kibana and an APM server. Based on [evermight/elastic-cluster-docker-compose](https://github.com/evermight/elastic-cluster-docker-compose/blob/master/docker-compose.yml).
 
-> **APM:** the APM server reads `config/apm-server.yml` (the image does not take `output.elasticsearch.*` settings from environment variables). `smoke-test.sh` sends a transaction to the APM server and requires it to appear in the `traces-apm*` data stream.
+> **APM:** the APM server reads `config/apm-server.yml` (the image does not take `output.elasticsearch.*` settings from environment variables). `smoke-test.sh` sends a transaction (Elastic APM intake API) and an OpenTelemetry span (OTLP/HTTP to `http://localhost:8200/v1/traces`) to the APM server and requires both to appear in the `traces-apm*` data stream. Point an OpenTelemetry SDK or collector at `http://localhost:8200` to send your own traces.
 
 ## Services
 

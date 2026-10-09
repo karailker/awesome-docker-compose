@@ -37,6 +37,10 @@ Copy `.env.example` to `.env` and adjust. Every variable has a default in `compo
 
 - Port 9000 (native protocol) conflicts with MinIO/RustFS if you run them at the same time.
 
+## Testing
+
+`smoke-test.sh` (run by CI with `scripts/smoke.sh base/clickhouse`) creates a MergeTree table over the HTTP interface, inserts rows and aggregates them, checks a wrong password is refused and that Tabix answers.
+
 ## Data and volumes
 
 Data is kept in Docker-managed named volumes, so nothing has to be created before the first start.
