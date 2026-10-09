@@ -32,7 +32,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `base/apache-airflow` | ✅ | heavy smoke + functional test | example DAG unpaused, triggered and run to success on the Celery worker |
 | `base/feast` | ✅ | heavy smoke + functional test | online server, registry REST API and UI answer (the UI crash-looped on an obsolete `-r` option before the test existed) |
 | `stacks/mlflow-minio-postgres-pgadmin` | ✅ | heavy smoke x3 object stores + functional test | RustFS (default), SeaweedFS, Garage; logs a run with an artifact and reads it back |
-| `stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin` | ✅ | heavy smoke x3 object stores + functional test | bucket write/read/delete; the OIDC login itself is not exercised |
+| `stacks/mlflow-oidc-keycloak-minio-postgres-pgadmin` | ✅ | heavy smoke x3 object stores + functional test | full login through Keycloak (`/login` -> login form -> `/callback`), anonymous API refused, OIDC session accepted, bucket write/read/delete; the test found that the demo user needed a first and last name (Keycloak's "Verify profile" step blocked the login) |
 | `stacks/rag-ollama-openwebui-qdrant` | ✅ | heavy smoke (Qdrant and pgvector variants) + functional test | models download, embeddings, generation, similarity search and an Open WebUI upload that lands in the vector database; the GPU override is untested (no GPU runners) |
 | `stacks/lgtm-observability` | ✅ | PR smoke + functional test | trace, metric and log round trip through the collector; span metrics from Tempo; alert rules loaded and the Watchdog alert reaches Alertmanager; Grafana provisioning checked; demo profile exercised in CI |
 | `stacks/langfuse-postgres-clickhouse-s3` | ✅ | heavy smoke x3 object stores + functional test | headless init, trace ingested through the public API and read back (web, Redis, worker, ClickHouse, S3) |
@@ -40,7 +40,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `stacks/wandb-minio-postgres` | ✅ starts | heavy smoke x3 object stores + functional test | UI answers and the bucket is writable; real use of W&B Local may need a license/account |
 | `base/metabase` | ✅ | PR smoke + functional test | setup via API, sample database added, native SQL query |
 | `base/superset` | ✅ | heavy smoke + functional test | API login, sample database registered, SQL Lab query; the image is built locally to add the PostgreSQL driver |
-| `base/elasticsearch` | ✅ | heavy smoke + functional test | 3 nodes green, document indexed and searched, Kibana available; APM ingestion is still not tested |
+| `base/elasticsearch` | ✅ | heavy smoke + functional test | 3 nodes green, document indexed and searched, Kibana available, an APM transaction sent to the APM server is found in `traces-apm*`; the test found that the APM server ignored its settings (they were environment variables named like config keys) and then could not read the CA certificate (run as group 0 now) |
 | `base/milvus` | ✅ | heavy smoke x3 object stores + functional test | collection, insert and similarity search via REST |
 | `base/gitlab` | ✅ | heavy smoke + functional test | sign-in page answers, an admin API token is created in the container and a project is created through the API (the test found that GitLab's migrations failed with `out of shared memory` until PostgreSQL got `max_locks_per_transaction=256`); needs about 4 GB RAM; credentials are hard-coded and `external_url` does not match the published port |
 
@@ -72,7 +72,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 ### Blocked / not feasible ⛔
 - **Nvidia Triton**: needs an NGC image of about 10 GB, models and ideally a GPU. Cannot be smoke tested on GitHub-hosted runners. A CPU-only example is possible but should be tagged as untested in CI.
 - **Great Expectations**: a Python library, there is no server to run. The useful compose artifact is a job that runs checks against a database plus a Data Docs web server; this is a design decision, not just an image.
-- **ElasticAPM end to end**: the APM server container is healthy, but ingestion is not tested, so the note in the README stays until a real trace round trip is added to CI.
+- ~~**ElasticAPM end to end**~~ Done: a transaction round trip is part of the Elasticsearch test.
 
 ## Known issues
 
@@ -124,7 +124,7 @@ Ideas for what to add next, grouped and roughly prioritized. Nothing here is com
 - **Dev platform**: Gitea/Forgejo + Woodpecker + Harbor + Traefik.
 
 ### Testing improvements
-- Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for all heavy projects; shared helpers in `scripts/smoke-lib.sh`). Next candidates: run a query on each plain database project, ingest a trace into the APM server, log in through Keycloak in the MLflow-OIDC stack.
+- Projects can ship a `smoke-test.sh` that `scripts/smoke.sh` runs after the stack is up (done for all heavy projects; shared helpers in `scripts/smoke-lib.sh`). Next candidates: run a query on each plain database project, ingest spans through an OpenTelemetry exporter into the APM server.
 - A scheduled job that opens an issue when the weekly heavy run fails.
 - Resource budget per project in metadata (RAM/CPU) so the heavy workflow can pick the right runner and timeout.
 

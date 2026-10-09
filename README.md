@@ -48,7 +48,7 @@ These are pre-configured setups combining multiple services for specific use cas
 - **[Local RAG / LLM (Ollama + Open WebUI + Qdrant)](stacks/rag-ollama-openwebui-qdrant/)**: Private chat UI with document question answering; Ollama runs the models, Qdrant stores the embeddings.
 - **[Weights & Biases Local with S3 store and MySQL](stacks/wandb-minio-postgres/)**: Self-hosted W&B experiment tracking with S3-compatible artifact storage.
 
-> **Note**: ElasticAPM integration for ElasticSearch is under development and may not work properly yet. Updates are in progress.
+> **Note**: the APM server of the Elasticsearch project is configured with `config/apm-server.yml`; CI sends a transaction to it and checks that it arrives in Elasticsearch (`traces-apm*`).
 
 ## Testing
 
