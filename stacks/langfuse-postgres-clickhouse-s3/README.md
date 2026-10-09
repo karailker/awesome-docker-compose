@@ -27,18 +27,16 @@ docker compose up -d
 ### Send a trace
 
 ```python
-from langfuse import Langfuse
-lf = Langfuse(host="http://localhost:3000", public_key="pk-lf-demo", secret_key="sk-lf-demo")
-trace = lf.trace(name="hello", input="ping", output="pong")
+import os
+os.environ.update(LANGFUSE_HOST="http://localhost:3000", LANGFUSE_PUBLIC_KEY="pk-lf-demo", LANGFUSE_SECRET_KEY="sk-lf-demo")
+from langfuse import get_client            # v3+ SDK, built on OpenTelemetry
+lf = get_client()
+with lf.start_as_current_observation(name="hello", as_type="span", input="ping") as span:
+    span.update(output="pong")
 lf.flush()
 ```
 
-Or with curl (this is what `smoke-test.sh`, run by CI, does):
-
-```sh
-curl -u pk-lf-demo:sk-lf-demo -H 'Content-Type: application/json' http://localhost:3000/api/public/ingestion \
-  -d '{"batch":[{"id":"ev1","type":"trace-create","timestamp":"2026-01-01T00:00:00.000Z","body":{"id":"t1","name":"hello"}}]}'
-```
+Langfuse v4 receives traces as OpenTelemetry spans (the legacy `trace-create` events of `/api/public/ingestion` are rejected in the default `events_only` mode). Any OTLP exporter works; endpoint `http://localhost:3000/api/public/otel`, header `Authorization: Basic <base64 public:secret>` and `x-langfuse-ingestion-version: 4`. `smoke-test.sh` (run by CI) posts one span as OTLP/JSON to `/api/public/otel/v1/traces` and reads it back.
 
 Use it with the [RAG stack](../rag-ollama-openwebui-qdrant/): point your application's Langfuse SDK (or an OpenTelemetry exporter) at `http://localhost:3000`.
 
