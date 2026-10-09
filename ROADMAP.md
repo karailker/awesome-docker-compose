@@ -42,7 +42,7 @@ Run the same checks locally with `scripts/smoke.sh base/<name>` and `python3 scr
 | `base/superset` | ✅ | heavy smoke + functional test | API login, sample database registered, SQL Lab query; the image is built locally to add the PostgreSQL driver |
 | `base/elasticsearch` | ✅ | heavy smoke + functional test | 3 nodes green, document indexed and searched, Kibana available; APM ingestion is still not tested |
 | `base/milvus` | ✅ | heavy smoke x3 object stores + functional test | collection, insert and similarity search via REST |
-| `base/gitlab` | ✅ | heavy smoke + functional test | root signs in over OAuth and creates a project through the API; needs about 4 GB RAM; credentials are hard-coded and `external_url` does not match the published port |
+| `base/gitlab` | ✅ | heavy smoke + functional test | sign-in page answers, an admin API token is created in the container and a project is created through the API (the test found that GitLab's migrations failed with `out of shared memory` until PostgreSQL got `max_locks_per_transaction=256`); needs about 4 GB RAM; credentials are hard-coded and `external_url` does not match the published port |
 
 ## Roadmap items
 

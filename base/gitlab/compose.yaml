@@ -3,6 +3,9 @@ services:
     image: postgres:17
     container_name: gitlab_postgresql
     restart: unless-stopped
+    # GitLab's schema needs far more than the default 64 locks per transaction: its migrations fail with
+    # "ERROR: out of shared memory" otherwise and the Omnibus container restarts in a loop.
+    command: ["postgres", "-c", "max_locks_per_transaction=256"]
     environment:
       POSTGRES_USER: gitlab
       POSTGRES_PASSWORD: gitlab
@@ -37,6 +40,7 @@ services:
     container_name: gitlab
     restart: unless-stopped
     hostname: gitlab.local
+    shm_size: 256m   # GitLab's recommendation for Omnibus
     environment:
       GITLAB_ROOT_PASSWORD: S3cureP@ssw0rd_2025
       GITLAB_ROOT_EMAIL: admin@example.com
@@ -56,6 +60,11 @@ services:
         # --- External Redis ---
         gitlab_rails['redis_host'] = 'gitlab_redis'
         gitlab_rails['redis_port'] = 6379
+
+        # --- Smaller footprint (a single-user dev instance): faster start, less memory ---
+        puma['worker_processes'] = 0
+        sidekiq['concurrency'] = 10
+        prometheus_monitoring['enable'] = false
 
         # Optional: set timezone
         # gitlab_rails['time_zone'] = 'Europe/Istanbul'
