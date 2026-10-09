@@ -86,36 +86,27 @@ services:
       - mflow-stack-network
 
   postgres:
-    image: postgres:17
+    extends:
+      file: ../../shared/postgres/compose.yaml
+      service: postgres
     container_name: postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
       POSTGRES_USER: ${POSTGRES_USER:-myuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypassword}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     networks:
       - mflow-stack-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-myuser} -d ${POSTGRES_DB:-mydatabase}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   pgadmin:
-    image: elestio/pgadmin:REL-9_18
+    extends:
+      file: ../../shared/postgres/compose.yaml
+      service: pgadmin
     container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-adminpassword}
     depends_on:
-      - postgres
-    ports:
-      - "5433:80"
+      postgres:
+        condition: service_healthy
     networks:
       - mflow-stack-network
-    restart: unless-stopped
 
 volumes:
   s3_data:

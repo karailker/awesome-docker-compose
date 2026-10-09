@@ -1,0 +1,21 @@
+# APM Server configuration. The image reads its settings from this file (or -E flags), not from
+# environment variables named like the settings. ${VAR:default} is expanded from the container environment.
+apm-server:
+  host: "0.0.0.0:8200"
+  # agent central configuration; Kibana here is plain HTTP inside the compose network
+  kibana:
+    enabled: true
+    host: "http://kibana:5601"
+    username: kibana_system
+    password: "${KIBANA_PASSWORD:kibanasystempassword}"
+
+output.elasticsearch:
+  hosts: ["https://es01:9200", "https://es02:9200", "https://es03:9200"]
+  username: elastic
+  password: "${ELASTIC_PASSWORD:elasticpassword}"
+  ssl:
+    certificate_authorities: ["/usr/share/apm-server/config/certs/ca/ca.crt"]
+
+logging:
+  level: info
+  to_stderr: true

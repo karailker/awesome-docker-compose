@@ -78,23 +78,17 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:17
+    extends:
+      file: ../../shared/postgres/compose.yaml
+      service: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-langfuse}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-langfuse}
       POSTGRES_DB: ${POSTGRES_DB:-langfuse}
       TZ: UTC
       PGTZ: UTC
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     networks:
       - langfuse
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-langfuse} -d ${POSTGRES_DB:-langfuse}"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
 
   clickhouse:
     image: ${CLICKHOUSE_IMAGE:-clickhouse/clickhouse-server:25.12.11}

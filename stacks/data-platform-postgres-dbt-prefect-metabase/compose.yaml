@@ -6,21 +6,16 @@ x-postgres-env: &postgres-env
 
 services:
   postgres:
-    image: postgres:17
+    extends:
+      file: ../../shared/postgres/compose.yaml
+      service: postgres
     container_name: platform-postgres
     environment:
       <<: *postgres-env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d:ro # creates the metabase and prefect databases on first start
     networks:
       - platform
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-platform} -d ${POSTGRES_DB:-warehouse}"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
 
   prefect-server:
     image: ${PREFECT_IMAGE:-awesome-compose/data-platform-prefect:local} # built from ./Dockerfile

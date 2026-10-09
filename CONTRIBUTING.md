@@ -39,7 +39,7 @@ CI enforces most of this on every pull request (`.github/workflows/ci.yml`):
 - [ ] Projects with more than "it starts" behaviour ship an executable `smoke-test.sh` (see `stacks/lgtm-observability/`); `scripts/smoke.sh` runs it automatically (source `scripts/smoke-lib.sh` for `retry`, `fail` and friends)
 - [ ] `make check` passes and you ran `make smoke P=<dir>` (or `scripts/smoke.sh <dir>`) locally. If the project is lightweight, add it to the `smoke` matrix in `ci.yml`; if it needs lots of RAM or time, add it to `heavy-smoke.yml`
 - [ ] For S3-compatible stores, `scripts/s3-smoke.py` passes against the endpoint
-- [ ] Projects that need S3 storage use the shared `s3` + `create-bucket` pattern with `compose.seaweedfs.yaml` / `compose.garage.yaml` variants (copy from `stacks/mlflow-minio-postgres-pgadmin/`; see `shared/s3/README.md`); CI validates every `compose.<variant>.yaml`
+- [ ] Projects that need S3 storage use the shared `s3` + `create-bucket` pattern with `compose.seaweedfs.yaml` / `compose.garage.yaml` variants (copy from `stacks/mlflow-minio-postgres-pgadmin/`; see `shared/s3/README.md`) and PostgreSQL / pgAdmin extend `shared/postgres/compose.yaml`; CI validates every `compose.<variant>.yaml`
 - [ ] Data uses named volumes with `name: ${VOLUME_PREFIX:-<project>}_<volume>` and the project has a `compose.bind.yaml` override for host directories (copy one from an existing project; CI checks that every volume is overridden)
 - [ ] Host directories used by `compose.bind.yaml` are listed in `.gitignore`
 
