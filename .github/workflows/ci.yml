@@ -40,7 +40,7 @@ jobs:
           shellcheck scripts/*.sh base/*/*.sh stacks/*/*.sh
           shellcheck -s sh shared/*/*.sh
       - name: Lint GitHub workflows
-        uses: docker://rhysd/actionlint:1.7.7
+        uses: docker://rhysd/actionlint:1.7.12
         with:
           args: -color
       - name: Image tags are pinned
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: base/fastapi/Dockerfile
           failure-threshold: error
